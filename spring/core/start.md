@@ -28,31 +28,30 @@ Note:  在Spring中,被Spring Ioc 容器管理的骨干对象被称作beans,一�
 
 5. 组建基于 xml的配置元数据
     Spring能从多个路径获取上下文,也支持通过import元素引入资源文件,如下
-   <pre>
-    <beans>
-        <import resource="services.xml"/>
-        <import resource="resources/messageSource.xml"/>
-        <import resource="/resources/themeSource.xml"/>
-    
-        <bean id="bean1" class="..."/>
-        <bean id="bean2" class="..."/>
-    </beans>
-   </pre>
+   ```
+       <beans>
+                <import resource="services.xml"/>
+                <import resource="resources/messageSource.xml"/>
+                <import resource="/resources/themeSource.xml"/>
+                <bean id="bean1" class="..."/>
+                <bean id="bean2" class="..."/>
+            </beans>
+   ```
     上面的路径可以使用相对路径,但是不推荐，其次可以使用file://抓取绝对路径资源, 同时可以使用SPEL语法,读取jvm属性（运行时）
 可以通过各种spring提供的schema 添加指令特性,比如context  或者 util 
 
 6.容器的使用很简单  可以刷新容器、注册bean定义，或者所有的beanNames  以及通过条件获取bean对象;
     例如
-<pre>
+```
     // create and configure beans
     ApplicationContext context = new ClassPathXmlApplicationContext("services.xml", "daos.xml");
-    
+
     // retrieve configured instance
     PetStoreService service = context.getBean("petStore", PetStoreService.class);
     
     // use configured instance
     List<String> userList = service.getUsernameList();
-</pre>
+```
 更加灵活的方式使用GenericApplicationContext 来进行读取代理,例如XmlBeanDefinitionReader 对xml形式的Bean定义进行解析!
 <pre>
     GenericApplicationContext context = new GenericApplicationContext();
