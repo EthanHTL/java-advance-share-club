@@ -20,8 +20,10 @@ Defaultlistablefactory，他能够有两个方法，第一个是registersingleto
     ```
     可能还无法理解,比如A子系统或许想要引用一个名称为subsystemA-datasource,对于b系统来说可能想引用subsystemB-datasource,当使用这些子系统组成一个应用系统的时候，主系统引用myApp-datasource引用数据库,那么这时有三个引用关系,你能够给这写配置元数据配置别名!
  ```xml
+ <beans>
     <alias name="myApp-dataSource"                  alias="subsystemA-dataSource"/>
     <alias name="myApp-dataSource" alias="subsystemB-dataSource"/>
+</beans>
  ```
 现在每一个组件都能够正确的被引用，不会被其他定义所冲突（有效的创建一个命名空间），但是它们引用的同样是一个bean!
 @Bean注解也能够提供别名!
@@ -80,17 +82,19 @@ Note: 如果需要在构造器上使用参数或者对象构造之后进行属�
 ```
 比如 xml定义元数据形式如下:
 ```xml
-<bean id="serviceLocator" class="examples.DefaultServiceLocator">
-    <!-- inject any dependencies required by this locator bean -->
-</bean>
+<beans>
+    <bean id="serviceLocator" class="examples.DefaultServiceLocator">
+        <!-- inject any dependencies required by this locator bean -->
+    </bean>
 
-<bean id="clientService"
-    factory-bean="serviceLocator"
-    factory-method="createClientServiceInstance"/>
+    <bean id="clientService"
+          factory-bean="serviceLocator"
+          factory-method="createClientServiceInstance"/>
 
-<bean id="accountService"
-    factory-bean="serviceLocator"
-    factory-method="createAccountServiceInstance"/>
+    <bean id="accountService"
+          factory-bean="serviceLocator"
+          factory-method="createAccountServiceInstance"/>
+</beans>
 ```
 可以注意到上述的工厂方法存在多个!
 对应的java编码格式:
