@@ -3,11 +3,11 @@ springFramework是对控制反转的主要实现,Ioc已知就是控制反转，�
 当创建bean的时候将会拦截这些依赖,将会从根本上去翻转控制(bean的实例化或者通过通过使用类的直接构造器或者服务发现模式解析此bean的依赖)
 
 2.Application context是bean factory的一个超集，它提供了许多能力,例如:
-四大特性，
-    1.第一是更容易的和spring aop进行集成。
-    2.第二个是事件发布，
-    3.第三个是选择应用的上下文(比如web环境选用WebApplicationContext)
-    4.第四是为国际化做处理。
+四大特性<br/>
+    1.第一是更容易的和spring aop进行集成。<br/>
+    2.第二个是事件发布，<br/>
+    3.第三个是选择应用的上下文(比如web环境选用WebApplicationContext)<br/>
+    4.第四是为国际化做处理。<br/>
     可以知道applicationContext 提供了更多的企业级功能，而BeanFactory（提供了配置框架和一些基础功能）,如果需要使用BeanFactory代替ApplicationContext
     查看BeanFactory章节!
 
