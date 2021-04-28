@@ -208,3 +208,99 @@ public class SomeClass {
     </bean>
 </beans>
 ```
+
+#### 空值
+xml中可以使用<null>标签处理空数据,空数据和空字符串被会被spring信任!
+#### 再次说p空间
+p命名空间并不会是一个xsd定义,所以它能够直接设置属性名,所以你可能会觉得很奇怪,看一个例子:
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean name="john-classic" class="com.example.Person">
+        <property name="name" value="John Doe"/>
+        <property name="spouse" ref="jane"/>
+    </bean>
+
+    <bean name="john-modern"
+          class="com.example.Person"
+          p:name="John Doe"
+          p:spouse-ref="jane"/>
+
+    <bean name="jane" class="com.example.Person">
+        <property name="name" value="Jane Doe"/>
+    </bean>
+</beans>
+```
+然后可以发现p直接设置了属性名并通过-ref设置属性引用的其他设置!
+
+虽然可以这样用,但是和标准xml语法并不一致,建议不要混合使用三种xml语法格式,这有可能导致意外的情况产生!
+#### c namespace
+与p相似,但是用于替换构造参数的写法,如下:
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="beanTwo" class="x.y.ThingTwo"/>
+    <bean id="beanThree" class="x.y.ThingThree"/>
+
+    <!-- traditional declaration with optional argument names -->
+    <bean id="beanOne" class="x.y.ThingOne">
+        <constructor-arg name="thingTwo" ref="beanTwo"/>
+        <constructor-arg name="thingThree" ref="beanThree"/>
+        <constructor-arg name="email" value="something@somewhere.com"/>
+    </bean>
+
+    <!-- c-namespace declaration with argument names -->
+    <bean id="beanOne" class="x.y.ThingOne" c:thingTwo-ref="beanTwo"
+        c:thingThree-ref="beanThree" c:email="something@somewhere.com"/>
+
+</beans>
+```
+使用之前需要申明,并且在反编译的情况下,可能不知道参数名,可以通过下列方式进行设置参数:
+```xml
+<!-- c-namespace index declaration -->
+<bean id="beanOne" class="x.y.ThingOne" c:_0-ref="beanTwo" c:_1-ref="beanThree"
+    c:_2="something@somewhere.com"/>
+```
+
+#### 为合成属性设置值
+例如为一个bean的多级层次的属性设置属性可以通过
+```xml
+a.ss.xx.cc 设置属性,比如:
+<bean id="something" class="things.ThingOne">
+<property name="fred.bob.sammy" value="123" />
+</bean>
+```
+#### depends-on
+依赖的对象后初始化,先摧毁,被依赖的bean先初始化,后摧毁;
+#### lazy init
+默认情况下,applicationContext将尽可能早的初始化单例,但是可以使用懒加载取消提前加载!
+```xml
+<bean id="lazy" class="com.something.ExpensiveToCreateBean" lazy-init="true"/>
+<bean name="not.lazy" class="com.something.AnotherBean"/>
+```
+可以在容器级别上设置懒加载
+```xml
+<beans default-lazy-init="true">
+    <!-- no beans will be pre-instantiated... -->
+</beans>
+```
+### 自动装配合作者
+自动装配的优点:
+本质上来说,是让spring解析这些合作者(通过检测applicationContext的内容)
+1) 减少需要指定的构造器参数或者需要指定的属性
+2) 随着配置的修改,而不需要改变任何配置,让代码更加稳定,且自动更新配置;
+   自动装配存在四种模式:
+   如果是xml,可以在bean上开启autowire属性 <br/>
+   a. no （默认）无自动装配。 Bean引用必须由ref元素定义。对于大型部署，不建议更改默认设置，因为明确指定协作者可提供更大的控制力和清晰度。在某种程度上，它记录了系统的结构<br/>
+   b. byName spring将查找当前属性同名的bean将其自动装配到属性上!<br/>
+   c. byType 这种模式下会根据bean的类型进行匹配,但是容器中只能存在一个,否则抛出异常,其次如果没有匹配，什么也不会发生！<br/>
+   d.constructor 这种方式类似byType,但是应用在构造器参数上,如果容器中不存在此参数类型的Bean将抛出致命错误!
+   在byType或者constructor自动装配的模式下,你能够使用array以及具有类型的集合,在这种情况下,所有满足类型的bean都会自动装配到参数上,对于map也是类似,尤其是强类型Map,这可能导致匹配的bean都会自动装配到map中并且key是bean 名称!
