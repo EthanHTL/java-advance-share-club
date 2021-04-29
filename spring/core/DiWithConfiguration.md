@@ -304,3 +304,137 @@ a.ss.xx.cc 设置属性,比如:
    c. byType 这种模式下会根据bean的类型进行匹配,但是容器中只能存在一个,否则抛出异常,其次如果没有匹配，什么也不会发生！<br/>
    d.constructor 这种方式类似byType,但是应用在构造器参数上,如果容器中不存在此参数类型的Bean将抛出致命错误!
    在byType或者constructor自动装配的模式下,你能够使用array以及具有类型的集合,在这种情况下,所有满足类型的bean都会自动装配到参数上,对于map也是类似,尤其是强类型Map,这可能导致匹配的bean都会自动装配到map中并且key是bean 名称!
+   
+3) 自动装配的限制和缺点 <br/>
+a.一般情况下，全局使用自动装配是合适的,但是如果是部分使用可能会对开发者产生疑惑,其次显式的属性或者构造器参数将会覆盖自动装配,并且不能自动装配简单的值;<br/>
+   
+b.对于从spring容器生成记录的工具来说bean的连接信息可能并不可用;<br/>
+c.容器中的多个bean定义对指定类型的setter或者构造器参数进行匹配,对于数组、集合、map这并不是一个问题,如果一个依赖是期待的单个值,那么不可能随意的解析(可能会有歧义)，如果没有独一无二的bean 可用,一个异常将会抛出!<br>
+对于上述的这些情况,
+1) 你可以选择放弃自动装配进而喜欢显式连接;
+2) 通过对bean的定义设置autowire-candidate  属性为false,避免将它作为依赖进行自动装配!
+3) 可以使用主要候选者规避这个问题,例如bean的primary = truee
+4) 通过实现更加细腻化的注解方式进行配置;
+
+### 从自动装配中排除一个bean
+   设置bean的autowire-candidate =false 将排除它作为一个候选者,这样的话对@Autowired也无效!
+   这个属性设置仅仅会影响基于类型的自动装配,不会影响基于name进行显式引用,就算该bean没有作为auto-candidate (自动装配候选者)也是不受影响的;<br/>
+   同时可以根据对bean的名称进行模式匹配来限制自动装配候选者;顶级的beans 支持一个默认的default-autowire-candidates的属性(来接受一个或多个的模式),同时为了定义多个模式,可以进行逗号分割的列表,对于显式对autowire-candidate的属性设置为true/false将具有更高的优先级,模式匹配对这些bean将无效!<br/>
+这种技术是有效的,能够阻止将bean自动装配到其他bean中,它并不意味着一个排除的bean它自己不能通过自动装配进行配置,相反它自己不能作为自动装配的候选者而已;
+### 方法注入
+大多数情况,容器是单例,那么在单例需要和单例进行合作时或者非单例和非单例进行合作时(可以将一个bean作为另一个bean的属性),但是会产生一个问题,当生命周期不同的时候,则会出现问题,在单例的情况下,引用一个原型bean,这意味着单例A的方法只会执行一次,仅仅只有一次机会注入属性,那么这意味着容器不能在bean a(单例)需要原型bean的时候提供一个Bean(原型)的新实例;<br/>
+那么一种解决方案是控制翻转;通过实现ApplicationContextAware接口来对Bean a的产生进行通知,那么此时就可以知道注入Bean B,并且可以通过getBean('B')来使得容器查询Bean B是否已经创建成功(在每次需要的时候),比如举个例子:
+```xml
+public class CommandManager implements ApplicationContextAware {
+
+    private ApplicationContext applicationContext;
+
+    public Object process(Map commandState) {
+        // grab a new instance of the appropriate Command
+        Command command = createCommand();
+        // set the state on the (hopefully brand new) Command instance
+        command.setState(commandState);
+        return command.execute();
+    }
+
+    protected Command createCommand() {
+        // notice the Spring API dependency!
+        return this.applicationContext.getBean("command", Command.class);
+    }
+
+    public void setApplicationContext(
+            ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+}
+```
+但是这种方式不理想，因为进行了耦合,但是正由于这是Spring的高级特性,那么可以非常理想的使用它;
+想了解更多参考[博客](https://spring.io/blog/2004/08/06/method-injection/)
+
+### lookup method injection
+默认情况下,spring会通过cglib生成动态子类(通过字节码技术),然后覆盖指定的lookup方法;
+使用查询方法注入注入bean,有三个特点:
+1).为了让动态子类工作,覆盖的方法不能是final,spring容器的子类不能是final
+2).拥有抽象方法的单元测试需要自己给定实现类并且对抽象方法给定一个默认实现;
+3).具体的方法对于组件扫描也是必要的,这需要指定的类进行支撑;
+4).关键限制是不能在工厂方法使用或者在@Configuration注解的类中含有@Bean方法的方法上使用,因为它是查询注入bean,并不是创建Bean,所以无法在运行时创建动态生成子类!
+
+请注意，通常应使用具体的存根实现声明此类带注释的查找方法，以使它们与Spring的组件扫描规则兼容，在默认情况下抽象类将被忽略。此限制不适用于显式注册或显式导入的Bean类
+其次，在单例和原型上表现形式不一样,如下所示:
+```xml
+<!-- a stateful bean deployed as a prototype (non-singleton) -->
+<bean id="myCommand" class="fiona.apple.AsyncCommand" scope="prototype">
+    <!-- inject dependencies here as required -->
+</bean>
+
+<!-- commandProcessor uses statefulCommandHelper -->
+<bean id="commandManager" class="fiona.apple.CommandManager">
+    <lookup-method name="createCommand" bean="myCommand"/>
+</bean>
+```
+它会通过lookup-method 查询此方法并通过子类进行覆盖,返回此方法将返回myCommand的bean,并且该commandManager抽象类将会被忽略为了和组件扫描规则兼容!<br/>
+通过其他方式访问不同的作用域目标类型可以通过ObjectFactory / Provider注入点进行，查看[Scoped Beans as Dependencies](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-factory-scopes-other-injection)
+,并且这种方式或许没有 ServiceLocatorFactoryBean更加有效!<br/>
+另一种不常用的方式是对任意Bean的方法进行替换,这看起来比较奇妙!
+```xml
+public class MyValueCalculator {
+
+    public String computeValue(String input) {
+        // some real code...
+    }
+
+    // some other methods...
+}
+```
+如果有一个这样的@Bean,然后
+```xml
+/**
+ * meant to be used to override the existing computeValue(String)
+ * implementation in MyValueCalculator
+ */
+public class ReplacementComputeValue implements MethodReplacer {
+
+    public Object reimplement(Object o, Method m, Object[] args) throws Throwable {
+        // get the input value, work with it, and return a computed result
+        String input = (String) args[0];
+        ...
+        return ...;
+    }
+}
+```
+通过它替换上面@Bean的方法,xml形式写法如下:
+```xml
+<bean id="myValueCalculator" class="x.y.z.MyValueCalculator">
+    <!-- arbitrary method replacement -->
+    <replaced-method name="computeValue" replacer="replacementComputeValue">
+        <arg-type>String</arg-type>
+    </replaced-method>
+</bean>
+
+<bean id="replacementComputeValue" class="a.b.c.ReplacementComputeValue"/>
+```
+然后这将导致myValueCalculator的computeValue方法将被replacementComputeValue替换,并且可以通过，arg-type标识参数类型,这仅仅只有在具有方法重载的时候是必要的,其次类型信息可以是全标识类型的字串,例如java.util.String,也可以String!
+
+Note: 其实这种方式类似于注解方式的@Configuration中配置的@Bean工厂方法可以直接方法引用的方式:<br/>
+例如:
+```java
+@Bean
+@Scope("prototype")
+public AsyncCommand asyncCommand() {
+    AsyncCommand command = new AsyncCommand();
+    // inject dependencies here as required
+    return command;
+}
+
+@Bean
+public CommandManager commandManager() {
+    // return new anonymous implementation of CommandManager with createCommand()
+    // overridden to return a new prototype Command object
+    return new CommandManager() {
+        protected Command createCommand() {
+            return asyncCommand();
+        }
+    }
+}
+```
+本质上@Configuration类被解析跟Cglib有关,主要是因为Cglib生成动态代理类进行处理,所以能够进行相互引用、调用!
