@@ -1,6 +1,7 @@
 package spring.lookup.config;
 
 import org.springframework.context.annotation.*;
+import spring.lookup.autowired.TwoBean;
 import spring.lookup.entity.Command;
 
 /**
@@ -10,6 +11,7 @@ import spring.lookup.entity.Command;
  */
 @Configuration
 @ImportResource(locations = "classpath:applicationContext.xml")
+@ComponentScan(basePackages = {"spring.lookup.autowired","spring.lookup.beanPostProcessor"})
 public class ApplicationConfig {
 
     @Bean
@@ -18,6 +20,11 @@ public class ApplicationConfig {
         Command command = new Command();
         command.setState("123");
         return command;
+    }
+
+    @Bean
+    public TwoBean twoBean(){
+        return new TwoBean();
     }
 
 }

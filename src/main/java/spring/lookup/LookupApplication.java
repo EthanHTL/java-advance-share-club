@@ -12,8 +12,19 @@ import java.util.Scanner;
  */
 public class LookupApplication {
     public static void main(String[] args) {
-        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(ApplicationConfig.class);
+        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext();
+        annotationConfigApplicationContext.register(ApplicationConfig.class);
+        // 优雅的关闭回调
+        annotationConfigApplicationContext.registerShutdownHook();
+        annotationConfigApplicationContext.refresh();
+        // 当调用上下文的start的方法时,通过lifeCycleListener的代理执行
+
+        annotationConfigApplicationContext.start();
         Scanner scanner = new Scanner(System.in);
         scanner.nextLine();
+
+        // 显式触发生命周期回调
+        annotationConfigApplicationContext.close();
+
     }
 }
