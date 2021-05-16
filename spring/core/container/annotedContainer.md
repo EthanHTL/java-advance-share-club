@@ -213,3 +213,116 @@ You can also disable the default filters by setting useDefaultFilters=false on t
 在spring4.3开始,bean工厂方法可以声明一个InjectionPoint类型的参数,或者更加精确的一个类型(DependencyDescriptor)去访问当前请求注入点;
 对于其他作用域，factory方法仅在给定作用域中看到触发创建新bean实例的注入点（例如，触发创建懒惰单例bean的依赖项）。在这种情况下，可以将提供的注入点元数据与语义一起使用,这个选择对于原型bean可能超有用!
 最后，一个类可以为同一个bean保留多个@Bean方法，这是根据运行时可用的依赖项来安排使用多个工厂方法的安排。这与在其他配置方案中选择“最贪婪”的构造函数或工厂方法的算法相同：在构造时选择具有最大可满足依赖关系数量的变量，类似于容器在多个@Autowired构造函数之间进行选择的方式。
+
+#### 自动检测名字组件
+当bean名称没有设置时,可以spring默认会使用BeanNameGenerator进行bean名称生成,首字母小写,可以实现BeanNameGenerator进行改写默认的命名规则!对于多个包下的相同名称的类名(发生了命名冲突,则需要定义一个BeanNameGenerator),spring5.2.3开始FullyQualifiedAnnotationBeanNameGenerator 默认将设置为全路径修饰类名,但你可以改变这种策略!
+```xml
+<beans>
+    <context:component-scan base-package="org.example"
+        name-generator="org.example.MyNameGenerator" />
+</beans>
+```
+```java
+@Configuration
+@ComponentScan(basePackages = "org.example", nameGenerator = MyNameGenerator.class)
+public class AppConfig {
+    // ...
+}
+```
+#### 为自动检测的组件提供作用域
+这很简单,默认情况时一个单例,通过@Scope注解进行指定即可!
+@Scope注解的好处在于没有bean定义继承的概念,同时不存在类级别的继承,直白说它于具体的类配置相关,不存在继承!<br/>
+如果你想使用编程式而不是注解式的方式,你可以继承ScopeMetadataResolver接口进行处理,并在配置扫描器的时候提供它!
+```java
+@Configuration
+@ComponentScan(basePackages = "org.example", scopeResolver = MyScopeResolver.class)
+public class AppConfig {
+    // ...
+}
+```
+```xml
+<beans>
+    <context:component-scan base-package="org.example" scope-resolver="org.example.MyScopeResolver"/>
+</beans>
+```
+同时在扫描某些类的同时为其生成代理非常重要,因为作用域不同的时候,存在不同的运用场景,这里有一些可能的值:no, interfaces, and targetClass,于是乎:
+```java
+@Configuration
+@ComponentScan(basePackages = "org.example", scopedProxy = ScopedProxyMode.INTERFACES)
+public class AppConfig {
+    // ...
+}
+```
+```xml
+<beans>
+    <context:component-scan base-package="org.example" scoped-proxy="interfaces"/>
+</beans>
+```
+前面说到可以@Qualifier注解对组件进行标注,形成更加细腻化的配置,然后在xml形式的bean definition来说,可以设置qualifier元素或者meta元素(在不存在qualifier的前提下回退到meta)来定义组件元数据,这样就可以对指定的bean进行选取,同时前面提到可以通过@Qualifier元注解开发自己的自定义注解进行元数据定义,注意元数据是提供在每一个实例上,而不是每一个类上!
+例如:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+
+    <bean class="example.SimpleMovieCatalog">
+        <qualifier type="MovieQualifier">
+            <attribute key="format" value="VHS"/>
+            <attribute key="genre" value="Action"/>
+        </qualifier>
+        <!-- inject any dependencies required by this bean -->
+    </bean>
+
+    <bean class="example.SimpleMovieCatalog">
+        <qualifier type="MovieQualifier">
+            <attribute key="format" value="VHS"/>
+            <attribute key="genre" value="Comedy"/>
+        </qualifier>
+        <!-- inject any dependencies required by this bean -->
+    </bean>
+
+    <bean class="example.SimpleMovieCatalog">
+        <meta key="format" value="DVD"/>
+        <meta key="genre" value="Action"/>
+        <!-- inject any dependencies required by this bean -->
+    </bean>
+
+    <bean class="example.SimpleMovieCatalog">
+        <meta key="format" value="BLURAY"/>
+        <meta key="genre" value="Comedy"/>
+        <!-- inject any dependencies required by this bean -->
+    </bean>
+
+</beans>
+```
+
+其他bean的类配置如下:
+```java
+public class MovieRecommender {
+
+    @Autowired
+    @MovieQualifier(format=Format.VHS, genre="Action")
+    private MovieCatalog actionVhsCatalog;
+
+    @Autowired
+    @MovieQualifier(format=Format.VHS, genre="Comedy")
+    private MovieCatalog comedyVhsCatalog;
+
+    @Autowired
+    @MovieQualifier(format=Format.DVD, genre="Action")
+    private MovieCatalog actionDvdCatalog;
+
+    @Autowired
+    @MovieQualifier(format=Format.BLURAY, genre="Comedy")
+    private MovieCatalog comedyBluRayCatalog;
+
+    // ...
+}
+```

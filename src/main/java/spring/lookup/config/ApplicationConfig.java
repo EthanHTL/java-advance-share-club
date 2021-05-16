@@ -11,7 +11,7 @@ import spring.lookup.entity.Command;
  */
 @Configuration
 @ImportResource(locations = "classpath:applicationContext.xml")
-@ComponentScan(basePackages = {"spring.lookup.autowired","spring.lookup.beanPostProcessor"})
+@ComponentScan(basePackages = {"spring.lookup.autowired","spring.lookup.beanPostProcessor","spring.lookup.cglib"})
 public class ApplicationConfig {
 
     @Bean
