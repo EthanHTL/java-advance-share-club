@@ -15,3 +15,5 @@
 8) 2021/5/2 bean的其他注册、以及基于注解方式的使用,以及属性解析、属性覆盖,以及bean的作用域以及生命周期回调[beanNature.md,beanScope.md,container下的annotaedContainer.md,以及containerExt.md]!
 
 9) 2021/5/14 基于java和其他形式的混合配置,以及环境抽象,资源抽象,发布事件,国际化等应用上下文可选的能力,以及beanFactory的理解,BeanFactory和ApplicationContext的区别以及引导的概念![composeJavaOrOtherConfig.md]
+
+10) 2021/5/17 spring的Resource策略[Resource.md]!
