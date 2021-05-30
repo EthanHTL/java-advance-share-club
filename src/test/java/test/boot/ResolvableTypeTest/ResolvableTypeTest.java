@@ -157,9 +157,5 @@ public class ResolvableTypeTest {
         System.out.println(test.getType());
     }
 
-    @Test
-    public void test7(){
 
-        ResolvableType.forType()
-    }
 }
