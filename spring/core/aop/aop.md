@@ -340,8 +340,8 @@ public class AroundExample {
 任何通知方法的第一个参数都可以是连接点,类型为org.aspectj.lang.JoinPoint,在环绕通知中类型为ProceedingJoinPoint;
 有以下方法可以使用:
 * getArgs() 返回方法参数
-* getThis() 返回代理对象
-* getTarget() 返回目标对象
+* getThis() 返回代理对象本身
+* getTarget() 返回代理后的对象
 * getSignature 返回已经通知完毕的方法描述
 * toString() 打印出被通知的方法的有用描述
 
@@ -452,3 +452,301 @@ public Object preProcessQueryPattern(ProceedingJoinPoint pjp,
 在spring5.2.7开始,相同@Aspect类的通知方法运行在相同连接点基于通知类型的优先级顺序进行执行;
 @After方法的执行建议放在同一个切面的@AfterReturning 或者 @AfterThrowing通知方法之后,考虑"after finally advice"的概念 \
 由于同一个切面的多个相同类型在于同一个连接点的通知方法执行顺序未知这导致通过javac编译类的时候无法获取源码声明顺序,考虑将方法变成一个通知方法或者分别放入不同切面,并通过Order接口或者注解进行执行顺序调节;
+
+##### aop对bean进行增强
+introduction(在AspectJ中称为类型间声明)启用一个切片去声明被通知的对象声明 指定接口,在这些对象中间提供一个这个接口的实现;
+你能够制造一个introduction(通过使用@DeclareParent注解),能够给匹配的类型声明一个新的父类,例如给定一个接口UsageTracked,并给定一个默认实现DefaultUsageTracked,那么切面将会声明此服务接口的所有实现并实现此接口(举个例子:例如通过jmx 进行统计) \
+```java
+@Aspect
+public class UsageTracking {
+
+    @DeclareParents(value="com.xzy.myapp.service.*+", defaultImpl=DefaultUsageTracked.class)
+    public static UsageTracked mixin;
+
+    @Before("com.xyz.myapp.CommonPointcuts.businessService() && this(usageTracked)")
+    public void recordUsage(UsageTracked usageTracked) {
+        usageTracked.incrementUseCount();
+    }
+
+}
+```
+从这里可以发现它将com.xzy.myapp.service.*+ 的所有类进行了增强,同时还给当前代理增加了一个前置通知,那么当执行被代理的类的时候,由于这里将UsageTracked 也融合到了一起,将导致在执行前会先执行UsageTracked 实例的方法;(详情查看src下的aop包的应用),对于schema风格的增强[请看](https://blog.csdn.net/u011734144/article/details/77700072v)
+
+##### 切面实例化模型
+默认在spring 应用上下文中,切面是一个单例,但是spring支持 aspectJ的perthis,pertarget 实例化模型,percflow,percflowbelow,pertypewithin不支持;
+
+```java
+@Aspect("perthis(com.xyz.myapp.CommonPointcuts.businessService())")
+public class MyAspect {
+
+    private int someState;
+
+    @Before("com.xyz.myapp.CommonPointcuts.businessService()")
+    public void recordServiceUsage() {
+        // ...
+    }
+}
+```
+这样写那么当每一个服务对象执行业务逻辑都会创建一个切面实例(每一个对独一无二的对象绑定this在连接点匹配切入点表达式),在服务对象第一次执行时切面就会创建; 切面的作用域受限于服务对象作用域;切面创建之前没有任何通知方法执行,pertarget实例化模型工作形式和perthis差不多,但是是通过目标对象进行连接点匹配然后调用通知方法(由于切面中 this = target 那么目前代理对象 是原型对象时(那么效果是一致的),如果需要不一致,那么可以尝试通过一个方法返回当前代理对象的增强代理,然后继续调用对应被切的方法,此时代理对象就应该和代理后的对象不同,效果就可以出现了!);
+(详情看src下的aop例子)
+##### aop 例子
+例如并发访问,有时候由于悲观锁会抛出异常,那么需要重试,此时可以通过切面代理进行重试请求,重试次数用完之后在异常处理!
+```java
+@Aspect
+public class ConcurrentOperationExecutor implements Ordered {
+
+    private static final int DEFAULT_MAX_RETRIES = 2;
+
+    private int maxRetries = DEFAULT_MAX_RETRIES;
+    private int order = 1;
+
+    public void setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
+    }
+
+    public int getOrder() {
+        return this.order;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
+    }
+
+    @Around("com.xyz.myapp.CommonPointcuts.businessService()")
+    public Object doConcurrentOperation(ProceedingJoinPoint pjp) throws Throwable {
+        int numAttempts = 0;
+        PessimisticLockingFailureException lockFailureException;
+        do {
+            numAttempts++;
+            try {
+                return pjp.proceed();
+            }
+            catch(PessimisticLockingFailureException ex) {
+                lockFailureException = ex;
+            }
+        } while(numAttempts <= this.maxRetries);
+        throw lockFailureException;
+    }
+}
+```
+如果是非幂等操作,那么一次即可!
+```xml
+<aop:aspectj-autoproxy/>
+
+<bean id="concurrentOperationExecutor" class="com.xyz.myapp.service.impl.ConcurrentOperationExecutor">
+    <property name="maxRetries" value="3"/>
+    <property name="order" value="100"/>
+</bean>
+```
+然后这个注入bean即可使用;由于需要处理幂等性,所以可以准备一个注解,在幂等性操作上设置重试:
+```java
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Idempotent {
+    // marker annotation
+}
+```
+然后改写切面即可:
+```java
+@Around("com.xyz.myapp.CommonPointcuts.businessService() && " +
+        "@annotation(com.xyz.myapp.service.Idempotent)")
+public Object doConcurrentOperation(ProceedingJoinPoint pjp) throws Throwable {
+    // ...
+}
+```
+#### xml形式的aspectJ支持
+所有的配置放入<aop:config>中,<aop:config>是一种自动代理机制的沉重使用,请注意不要混合<aop:config>风格和AutoProxyCreator风格的[自动代理](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#aop-autoproxy)  (当你已经使用了BeanNameAutoProxyCreator或者其他相似的代理时,使用<aop:config>将导致一些问题,只推荐使用一种;)
+##### 声明一个切面
+```xml
+<aop:config>
+    <aop:aspect id="myAspect" ref="aBean">
+        ...
+    </aop:aspect>
+</aop:config>
+
+<bean id="aBean" class="...">
+    ...
+</bean>
+```
+##### 切点
+```xml
+<aop:config>
+
+    <aop:pointcut id="businessService"
+        expression="execution(* com.xyz.myapp.service.*.*(..))"/>
+
+</aop:config>
+```
+或者使用一个切入点表达式
+```xml
+<aop:config>
+
+    <aop:pointcut id="businessService"
+        expression="com.xyz.myapp.CommonPointcuts.businessService()"/>
+
+</aop:config>
+```
+请注意是一个顶级切入点表达式
+```xml
+<aop:config>
+
+    <aop:aspect id="myAspect" ref="aBean">
+
+        <aop:pointcut id="businessService"
+            expression="execution(* com.xyz.myapp.service.*.*(..))"/>
+
+        ...
+    </aop:aspect>
+
+</aop:config>
+```
+上述是一个切面内的切入点表达式
+```xml
+<aop:config>
+
+    <aop:aspect id="myAspect" ref="aBean">
+
+        <aop:pointcut id="businessService"
+            expression="execution(* com.xyz.myapp.service.*.*(..)) &amp;&amp; this(service)"/>
+
+        <aop:before pointcut-ref="businessService" method="monitor"/>
+
+        ...
+    </aop:aspect>
+
+</aop:config>
+```
+收集this对象作为连接点的上下文(并传递它给通知方法),monitor方法如下:
+```java
+public void monitor(Object service) {
+    // ...
+}
+```
+由于&amp;&amp;使用比较尴尬,笨重,所以可以使用and、or、not关键字替代对应的语法语义;
+```xml
+<aop:config>
+
+    <aop:aspect id="myAspect" ref="aBean">
+
+        <aop:pointcut id="businessService"
+            expression="execution(* com.xyz.myapp.service.*.*(..)) and this(service)"/>
+
+        <aop:before pointcut-ref="businessService" method="monitor"/>
+
+        ...
+    </aop:aspect>
+</aop:config>
+```
+xml形式中引用是通过id进行的组合切入点,而不是名称,所以@Aspect风格的切面配置支持更多;
+##### 前置通知
+```xml
+
+<aop:aspect id="beforeExample" ref="aBean">
+
+    <aop:before
+        pointcut-ref="dataAccessOperation"
+        method="doAccessCheck"/>
+
+    ...
+
+</aop:aspect>
+```
+也可使用行内切入表达式进行替换
+```xml
+<aop:aspect id="beforeExample" ref="aBean">
+
+    <aop:before
+        pointcut="execution(* com.xyz.myapp.dao.*.*(..))"
+        method="doAccessCheck"/>
+
+    ...
+</aop:aspect>
+```
+其他通知与之类似;
+##### xml中的通知顺序
+要么通过<aop:aspect>的order属性进行优先级确定或者增加@Order注解或者实现Ordered接口; \
+注意: 如果是相同切面中相同连接点的多个通知方法,那么可以通过xml中对于通知方法的声明顺序进行确定执行顺序(从高到底);
+一般来说,要么变成一个通知方法要么切分到不同aspect中;
+##### xml形式的introduction
+```xml
+
+<aop:aspect id="usageTrackerAspect" ref="usageTracking">
+
+    <aop:declare-parents
+        types-matching="com.xzy.myapp.service.*+"
+        implement-interface="com.xyz.myapp.service.tracking.UsageTracked"
+        default-impl="com.xyz.myapp.service.tracking.DefaultUsageTracked"/>
+
+    <aop:before
+        pointcut="com.xyz.myapp.CommonPointcuts.businessService()
+            and this(usageTracked)"
+            method="recordUsage"/>
+
+</aop:aspect>
+```
+只需要注意type-matching是一个Aspect 类型匹配表达式,需要增强的类型,其他的就是增强的接口以及默认实现,详情查看java形式版的introduction;
+##### advisor
+通过advisor能够包含一组advice,它包含的advice必须实现advice接口[advice type in spring](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#aop-api-advice-types) ,advisor能够使用aspectj 切入点表达式带来的好处,spring 提供了一个advisor的实现 <aop:advisor>  \
+```xml
+<aop:config>
+
+    <aop:pointcut id="businessService"
+        expression="execution(* com.xyz.myapp.service.*.*(..))"/>
+
+    <aop:advisor
+        pointcut-ref="businessService"
+        advice-ref="tx-advice"/>
+
+</aop:config>
+
+<tx:advice id="tx-advice">
+    <tx:attributes>
+        <tx:method name="*" propagation="REQUIRED"/>
+    </tx:attributes>
+</tx:advice>
+```
+例如这里使用一个advisor(它本质上是一个小的切面只有一个advice) 经常容易看到的是和事务advice进行联系; \
+设置advice的执行顺序只要通过advisor的order属性进行设置即可;
+
+##### 代理机制
+1) JDK动态代理
+2) CGLIB
+* CGLIB的缺点
+    * final 方法无法被通知,它不能覆盖运行时生成的子类;
+    * 从Spring 4.0开始，由于CGLIB代理实例是通过Objenesis创建的，因此不再调用代理对象的构造函数两次。仅当您的 JVM 不允许构造函数绕过时，您可能会看到来自 Spring 的 AOP 支持的双重调用和相应的调试日志条目 \
+强制使用cglib代理,只需要设置
+```xml
+<aop:config proxy-target-class="true">
+    <!-- other beans defined here... -->
+</aop:config>
+```
+多个<aop:config>部分在运行时会合并到一个auto-proxy 构造器,通常会在不同xml bean definition文件中设置<aop:config/>,除此之外,<tx:annotation-driven /> 以及 <aop:aspectj-auto-proxy/>都能够进行代理模式切换;
+##### 理解aop 代理
+通过代理调用方法然后代理到目标方法上执行;
+##### 程序化创建@AspectJ aop代理
+```java
+// create a factory that can generate a proxy for the given target object
+AspectJProxyFactory factory = new AspectJProxyFactory(targetObject);
+
+// add an aspect, the class must be an @AspectJ aspect
+// you can call this as many times as you need with different aspects
+factory.addAspect(SecurityManager.class);
+
+// you can also add existing aspect instances, the type of the object supplied must be an @AspectJ aspect
+factory.addAspect(usageTracker);
+
+// now get the proxy object...
+MyInterfaceType proxy = factory.getProxy();
+```
+通过org.springframework.aop.aspectj.annotation.AspectJProxyFactory对目标对象创建一个代理且被切面进行通知!
+
+#### 在spring中使用AspectJ
+AspectJ需要使用AspectJ的编辑器以及Weaver进行切面编织(替代SpringAop)
+spring和AspectJ建立关系的库(spring-aspects.jar),导入即可
+[ Using AspectJ to Dependency Inject Domain Objects with Spring](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#aop-atconfigurable) 以及  [ Other Spring aspects for AspectJ ](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#aop-ajlib-other)讨论库的内容以及如何使用它;
+[Configuring AspectJ Aspects by Using Spring IoC ](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#aop-aj-configure) 讨论了如何依赖注入AspectJ 切面(使用AspectJ编译器编织的切面),[ Load-time Weaving with AspectJ in the Spring Framework](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#aop-aj-ltw) 提供了如何在spring中进行 
+load-time weaving(对AspectJ)
+
+##### 使用AspectJ 依赖注入 domain 对象
+暂留(看不懂)
+
+

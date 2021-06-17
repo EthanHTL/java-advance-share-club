@@ -85,7 +85,7 @@ public class StringLookupTest {
                 else
                     directions[j] = k;
             }
-            // 则需要进行回退
+            // 则需要进行回退  
             else{
                 k = directions[k];
             }
