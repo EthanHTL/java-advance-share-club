@@ -1,0 +1,1 @@
+test.factory.MyFactory=test.factory.impl.MyFactoryImpl1,test.factory.impl.MyFactoryImpl2
