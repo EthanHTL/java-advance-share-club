@@ -747,6 +747,67 @@ spring和AspectJ建立关系的库(spring-aspects.jar),导入即可
 load-time weaving(对AspectJ)
 
 ##### 使用AspectJ 依赖注入 domain 对象
-暂留(看不懂)
+spring 容器实例化并配置beans到你的应用上下文中,他也可能询问一个工厂去配置一个预先存在的对象，给定了包含要应用的配置的bean 定义名称;
+spring-aspects.jar 包含了一个注解驱动的切面,利用这个能力去允许依赖注入任何对象,这对于在容器之外控制所创建的对象来说是有效的,Domain对象经常（fall into 落入，分成)分为 这一类,因为它们经常被编程创建(使用new 操作符,或者通过ORM 框架作为一个数据库查询的结果!)
+这么,一个@COnfigurable注解能够使得一个类对Spring 驱动配置适配,一个最简单的例子,你能够完全使用它作为一个标记者注解,例如:
 
+```java
+package com.xyz.myapp.domain;
 
+import org.springframework.beans.factory.annotation.Configurable;
+
+@Configurable
+public class Account {
+    // ...
+}
+```
+当使用这种方式作为一个标记者注解,spring 将会配置一个被此注解注解的类型的实例(Account,在这个例子中)-> 通过使用一个bean 定义(通常是原型bean definition)使用全类型修饰符作为相同的名称(com.xyz.myapp.domain.Account),因此默认名称就是它,一个方便的形式去生命这个原型定义是可以省略id属性,例如:
+```xml
+<bean class="com.xyz.myapp.domain.Account" scope="prototype">
+    <property name="fundsTransferService" ref="fundsTransferService"/>
+</bean>
+```
+如果显式的指定原型定义的指定名称,你可以直接声明在此注解上,例如 
+```java
+
+package com.xyz.myapp.domain;
+import org.springframework.beans.factory.annotation.Configurable;
+
+@Configurable("account")
+public class Account {
+    // ...
+}
+```
+spring 现在会查询一个名称叫做account的bean 定义并且会使用此bean 定义去创建一个Account实例
+你能够使用自动注入去避免拥有一个指定的专用bean 定义,为了能够自动装配 ,你也可以使用此注解的autowire属性,你要么指定@Configurable(autowire=Autowire.BY_TYPE) 或者@Configurable(autowire=Autowire.BY_NAME)去通过类型或者名称注入,另一方面，它更宁愿显式指定、注解驱动的依赖注入(通过对@Configurable的bean进行@Autowired或者@Inject)到字段或者方法级别(查看基于注解的容器配置获取更多)
+最终,你能够启动spring 对对象应用进行依赖检查通过dependencyCheck属性（在这种新的创建的以及可配置的对象)(例如,@Configurable(autowire=Autowire.BY_NAME,dependencyCheck=true)),如果属性设置为true,那么spring 会在配置完所有属性之后进行验证(这里的属性是非基础类型或者集合)以及被设置;\
+单独使用此注解没有任何效果,此注解被spring-aspectj.jar中的AnnotationBanConfigurerAspect处理,最终,此切面会说,"spring 会根据注解的属性进行新创建对象的配置,并且最终会返回此注解注解的某个类型的初始化实例",当前上下文中,初始化意味着新实例化对象(比如,通过new 实例化)同样也可以使用一个Serializable对象(通过底层的反序列化,例如[readResolve](https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html)) \
+上一段的关键点之一是"in essence", 对于大多数情况,"从新对象的初始化之后返回"是完全正确的,在当前上下文中,"初始化之后"意味着对象构造之后依赖已经注入了,这就意味着这些依赖对于类构造体中来说是不必要的（不可用的）,如果你想在构造器body运行之前因此,在构造器内使用它们是有效的->进行依赖注入,那么你需要定义一个这样的@Configurable注解,例如
+```java
+@Configurable(preConstruction = true)
+```
+你能发现关于这种各样的切入点类型的语言语义(在[appendix](https://www.eclipse.org/aspectj/doc/next/progguide/semantics-joinPoints.html) --- [Aspectj Programming Guide](https://www.eclipse.org/aspectj/doc/next/progguide/index.html))\
+为了让他工作,此注解的类型必须通过Aspectj weaver进行编织,你可以选择使用一个构建时Ant或者  maven任务来执行此目的(例如 [AspectJ Development Environment Guide](https://www.eclipse.org/aspectj/doc/released/devguide/antTasks.html))或者进行加载时编织(查看 [Load time Weaving with AspectJ in the spring FrameWork](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/core.html#aop-aj-ltw)).
+这个AnnotationBeanConfigurerAspect 它自己需要通过spring 进行配置(为了包含一个bean 工厂的应用,为了能够被这些新创建的对象进行使用),你可以使用基于java的方式配置，通过注解@EnableSpringConfigured 配置到任何@Configuration类上,例如:
+```java
+@Configuration
+@EnableSpringConfigured
+public class AppConfig {
+}
+```
+如果你更喜欢xml 的配置方式,那么Spring 上下文命名空间定义了一个方便的context:spring-configured 元素供你使用,例如:
+```xml
+<context:spring-configured />
+```
+@Configurable的实例化对象在切面已经配置之前创建会导致一个debug的问题消息日志记录并且此对象将不会携带任何配置,一个例子:
+可能在spring配置中创建了一个bean,当它初始化的时候可能会创建域对象,在这种情况下,你能够使用depends-on的bean属性来手动的指定这个bean依赖于配置的切面,下面是一个例子:
+```xml
+<bean id="myService"
+        class="com.xzy.myapp.service.MyService"
+        depends-on="org.springframework.beans.factory.aspectj.AnnotationBeanConfigurerAspect">
+
+    <!-- ... -->
+
+</bean>
+```
+不要激活一个@Configurable的处理（通过一个bean configurer切面),除非你真的打算依赖它的运行时语义,特别是,确保你没有将一个@Configurable的bean类注册为一个普通的Spring bean到容器中,因为这会造成两次初始化;

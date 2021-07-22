@@ -2,6 +2,8 @@ package javaSe.clazz;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 /**
  * @author JASONJ
  * @dateTime: 2021-05-27 20:26:08
@@ -14,10 +16,10 @@ public class C {
 
     @Test
     public static void main(String[] args) {
-        class C<T>{
+        class D<T>{
 
         }
 
-        System.out.println(Arrays.toString(C.class.getTypeParameters()));
+        System.out.println(Arrays.toString(D.class.getTypeParameters()));
     }
 }
