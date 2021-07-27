@@ -1,5 +1,5 @@
 # 关于bean的一些小东西
-对spirig来说，首先是bean的定义,包括很多东西。有类名,构造器参数，懒加载,属性,作用域。还有别名。
+对spirig来说，首先是bean的定义,包括很多东西。有类名,构造器参数，懒加载,属性,作用域。还有别名, 实例名。
 还有这个自动装配模式以及这个摧毁回调方法以及初始化方法。
 
 其三是，我们在容器外部注入bean的时候呢,可以通过那个applicationcontext这个类的实例进行bean注册，
@@ -160,7 +160,7 @@ Note: 在Spring文档中，factory bean指示是一个特殊的Bean,这个bean �
 </bean>
 ```
 构造器参数名:
-一般情况下,可以通过指定构造器参数名进行依赖注入,但是需要通过debug 标志进行编译代码,spring就能够自动检测参数名,如果不能或者不想启用debug模式,可以使用JDK主机 @ConstructorProperties显式指定构造器参数名!
+一般情况下,可以通过指定构造器参数名进行依赖注入,但是需要通过debug 标志进行编译代码,spring就能够自动检测参数名,如果不能或者不想启用debug模式,可以使用JDK注解 @ConstructorProperties显式指定构造器参数名!
 ```xml
 package examples;
 

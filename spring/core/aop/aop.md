@@ -811,3 +811,272 @@ public class AppConfig {
 </bean>
 ```
 不要激活一个@Configurable的处理（通过一个bean configurer切面),除非你真的打算依赖它的运行时语义,特别是,确保你没有将一个@Configurable的bean类注册为一个普通的Spring bean到容器中,因为这会造成两次初始化;
+##### 单元测试 @Configurable 对象
+@Configurable 支持的目标之一是为了启用独立领域对象单元测试(而不需要通过硬编码查询),如果@Configurable 类型没有通过Aspectj编织,那么此注解在单元测试时没有任何影响;你能够在此对象中设置模拟或者存根属性引用(让测试能够正常处理),如果@Configurable 类型已经通过Aspectj编织,你仍然能够在容器外部进行单元测试,但是你每次会得到一个警告信息(当你构造一个@Configurable对象时)-会指示它没有被spring 配置
+##### 多应用上下文工作
+AnnotationBeanConfigurerAspect 能够作为一个AspectJ 单例切面 为@Configurable 对象提供支持,这单例切面的作用域等价于static 成员作用域,这仅仅是一个切面实例(每一个类加载器会定义一个类型的切面实例),这意味着如果你需要通过相同类加载器体系定义多个应用上下文,你需要考虑定义一个@EnableSpringConfigured bean 并将Spring-aspects.jar 作为依赖放置在classpath上; \
+考虑一个典型的Spring Web应用程序配置，它有一个共享的父应用程序上下文，它定义了通用的业务服务、支持这些服务所需的一切，以及每个Servlet的一个子应用程序上下文（它包含该Servlet的特定定义）。所有这些上下文都在同一个classloader层次结构中共存，因此AnnotationBeanConfigurerAspect只能持有对其中一个的引用。在这种情况下，我们建议在共享（父）应用程序上下文中定义@EnableSpringConfigured bean。这定义了你可能想要注入到域对象中的服务。一个后果是，你不能通过使用@Configurable机制（这可能不是你想做的事情）来配置域对象，并引用定义在子（特定服务）上下文中的bean \
+在同一个容器中部署多个 web 应用程序时，确保每个 web 应用程序使用自己的类加载器加载 spring-aspects.jar 中的类型（例如，通过将 spring-aspects.jar 放在 'WEB-INF/lib' 中）。如果 spring-aspects.jar 仅添加到容器范围的类路径（因此由共享的父类加载器加载,例如应用类路径），则所有 Web 应用程序共享相同的方面实例（这可能不是您想要的
+
+##### 其他aspectJ的spring 切面
+除了@Configurable,spring-aspects.jar包括了一个衍生事务管理的类型 并且方法被@Transactional注解的支持,主要是为了用户在spring 容器外使用spring 框架的事务支持; \
+此切面会将@Transactional 解析为AnnotationTransactionAspect,使用此切面需要注解实现类(方法或者类都可以),而不是接口上注解,aspectj遵循java注解的规则,接口上的注解无法被继承 \
+一个@Transactional 注解如果在类上指示当前类上的任何公共操作执行的默认事务语义 \
+@Transactional 注解如果在方法上,将会覆盖类的默认事务语义(如果类上存在),任何可见性的方法都能被注解,包括私有方法,注解一个非公有方法是为唯一获取执行方法的事务划界 \
+spring 4.2开始,spring-aspects提供了一个类似的切面提供了抓取标准javax.transaction.Transactional注解的相同属性,查看JtaAnnotationTransactionAspect切面查看更多信息; \
+对于想要使用spring 配置以及 事务管理支持单又不想使用这些注解的切面编程者,spring-aspect也包含了一些abstract 切面 你能够扩展并提供你自己的切入点定义,查看AbstractBeanConfigurerAspect以及AbstractTransactionAspect了解更多, 举个例子,根据一个全修饰类名的原型bean 定义去写入一个能够配置所有对象实例(定义在领域模型中)的切面
+```java
+public aspect DomainObjectConfiguration extends AbstractBeanConfigurerAspect {
+
+    public DomainObjectConfiguration() {
+        setBeanWiringInfoResolver(new ClassNameBeanWiringInfoResolver());
+    }
+
+    // the creation of a new bean (any object in the domain model)
+    protected pointcut beanCreation(Object beanInstance) :
+        initialization(new(..)) &&
+        CommonPointcuts.inDomainModel() &&
+        this(beanInstance);
+}
+```
+##### 通过spring ioc 配置 aspectJ aspects
+当你在Spring应用程序中使用AspectJ方面时，自然希望并期望能够用Spring配置这些方面。AspectJ运行时本身负责方面的创建，而通过Spring配置AspectJ创建的方面的方法取决于方面使用的AspectJ实例化模型（per-xxx条款） \
+aspectJ 一般来说都是单例,配置很容易,你能够创建一个bean 定义来应用aspectj 类型并且包括一个 factory-method="aspectOf"的bean 属性,确保spring 获取aspect实例是通过询问AspectJ而不是自行创建;
+```xml
+<bean id="profiler" class="com.xyz.profiler.Profiler"
+        factory-method="aspectOf"> 
+
+    <property name="profilingStrategy" ref="jamonProfilingStrategy"/>
+</bean>
+```
+非单例需要使用@Configurable 支持(通过spring-aspects.jar)去配置 切面实例(在Aspectj 运行时创建的对象) \
+如果你想使用一些@Aspectj 切面(想通过AspectJ编织)-例如使用load-time 对领域模型类型编织以及想通过spring aop使用的@Aspect 切面,并且这些切面都配置到spring中了,你需要告诉Spring aop @AspectJ 自动代理支持(去抓取@Aspectj 切面-定义在配置中的的子集合),你能够使用一个或者多个<include>元素 到<aop:aspectj-autoproxy/>声明中,每一个<include> 元素都可以指定一个命名模式,并且仅仅只有bean的名称能够匹配其中一个模式才能够被spring aop用于自动代理配置所使用
+```xml
+<aop:aspectj-autoproxy>
+    <aop:include name="thisBean"/>
+    <aop:include name="thatBean"/>
+</aop:aspectj-autoproxy>
+```
+不要被<aop:aspectj-autoproxy/>元素误导,使用它会导致spring aop 代理创建,@Aspectj 风格的切面声明在这里能够更好的被使用,但是apectj 运行时不被执行;
+##### load-time weaving AspectJ(在 spring中)
+load-time weaving(LTW) 指的是 编织Aspectj 切面到一个应用类文件的处理程序(一开始 加载到jvm),此部分的核心就是在配置以及使用LTW 到spring框架的指定上下文,这部分不是一个LTW通用介绍,对于LTW的详细信息以及如何配置LTW到Aspect中(spring 不会执行它),查看[LTW section of the AspectJ Development Environment Guide](https://www.eclipse.org/aspectj/doc/released/devguide/ltw.html) \
+Spring 框架为 AspectJ LTW 带来的价值在于能够对编织过程进行更细粒度的控制。 “Vanilla”AspectJ LTW 是通过使用 Java (5+) 代理来实现的，该代理通过在启动 JVM 时指定 VM 参数来开启。因此，它是 JVM 范围的设置，在某些情况下可能很好，但通常有点过于粗糙。启用 Spring 的 LTW 允许您在每个类加载器的基础上打开 LTW，这更细粒度，并且在“单 JVM 多应用程序”环境中更有意义（例如在典型的应用程序服务器中找到）环境） \
+此外，在某些环境下，这种支持可以实现加载时编织，而不需要对应用服务器的启动脚本进行任何修改，因为需要添加 -javaagent:path/to/aspectjweaver.jar 或（正如我们在本节后面所描述的） -javaagent:path/to/spring-instrument.jar。开发人员配置应用程序上下文以启用加载时编织，而不是依靠通常负责部署配置的管理员，如启动脚本 \
+
+##### 第一个例子(刨析工具切面)
+可以通过基于xml配置亦可以通过java配置,同时可以使用@EnableLoadTimeWeaving 来替代 <context:load-time-weaver/>
+```java
+package foo;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.util.StopWatch;
+import org.springframework.core.annotation.Order;
+
+@Aspect
+public class ProfilingAspect {
+
+    @Around("methodsToBeProfiled()")
+    public Object profile(ProceedingJoinPoint pjp) throws Throwable {
+        StopWatch sw = new StopWatch(getClass().getSimpleName());
+        try {
+            sw.start(pjp.getSignature().getName());
+            return pjp.proceed();
+        } finally {
+            sw.stop();
+            System.out.println(sw.prettyPrint());
+        }
+    }
+
+    @Pointcut("execution(public * foo..*.*(..))")
+    public void methodsToBeProfiled(){}
+}
+```
+现在需要创建一个META-INF/aop.xml,通知aspectj 编织器(我们想要编织ProfilingAspect到我们的类中),这个配置文件是一个标准的Aspectj,例如:
+```xml
+<!DOCTYPE aspectj PUBLIC "-//AspectJ//DTD//EN" "https://www.eclipse.org/aspectj/dtd/aspectj.dtd">
+<aspectj>
+
+    <weaver>
+        <!-- only weave classes in our application-specific packages -->
+        <include within="foo.*"/>
+    </weaver>
+
+    <aspects>
+        <!-- weave in just this aspect -->
+        <aspect name="foo.ProfilingAspect"/>
+    </aspects>
+
+</aspectj>
+```
+现在你还需要移动配置的spring 相关部分,需要配置一个LoadTimeWeaver(这个组件有责任去编织切面配置(在META-INF/aop.xml中的配置,一个或者多个此文件都会自动进行处理))会将他们编织到应用程序中,这样做的一个好处是,不需要大量的配置(这里此时还有一些选项能够进行指定):
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- a service object; we will be profiling its methods -->
+    <bean id="entitlementCalculationService"
+            class="foo.StubEntitlementCalculationService"/>
+
+    <!-- this switches on the load-time weaving -->
+    <context:load-time-weaver/>
+</beans>
+```
+现在我们需要这些归档文件(meta-inf/aop.xml文件,以及spring 配置),需要创建一个驱动类(包含main方法的)来证实ltw的一个动作:
+```java
+package foo;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public final class Main {
+
+    public static void main(String[] args) {
+        ApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml", Main.class);
+
+        EntitlementCalculationService entitlementCalculationService =
+                (EntitlementCalculationService) ctx.getBean("entitlementCalculationService");
+
+        // the profiling aspect is 'woven' around this method execution
+        entitlementCalculationService.calculateEntitlement();
+    }
+}
+```
+现在还需要做一个事情,描述这一部分该怎样让每一个ClassLoader开启ltw(在spring中),然而 这个例子我么们使用了一个java代理(通过spring 提供)去开启LTW,我们使用以下命令去运行Main 类:
+```java
+java -javaagent:C:/projects/foo/lib/global/spring-instrument.jar foo.Main
+```
+这个-javaagent 是一个标志(指示并启动检测在 JVM 上运行的程序的代理),spring 的关系就是一个代理,InstrumentationSavingAgent,他被打包到spring-instrument.jar(将作为-javaagent的 值被处理),正如前面的一个例子所展示的那样; \
+从这个main程序的执行输出结果看起像下一个例子:(我们将Thread.sleep语句放入了calculateEntitlement实现 因此这个刨析者实际上能够捕捉0秒意外的某些事情)-01234毫秒不是aop引入的开销,下面的列表展示了结果:
+```text
+Calculating entitlement
+
+StopWatch 'ProfilingAspect': running time (millis) = 1234
+------ ----- ----------------------------
+ms     %     Task name
+------ ----- ----------------------------
+01234  100%  calculateEntitlement
+```
+因此ltw能够运用到成熟的aspectj,我们并没有限制它去通知spring bean,下面是一个main程序变种能够获取相同结果:
+```java
+package foo;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public final class Main {
+
+    public static void main(String[] args) {
+        new ClassPathXmlApplicationContext("beans.xml", Main.class);
+
+        EntitlementCalculationService entitlementCalculationService =
+                new StubEntitlementCalculationService();
+
+        // the profiling aspect will be 'woven' around this method execution
+        entitlementCalculationService.calculateEntitlement();
+    }
+}
+```
+根本上此例子是简单化的,但是ltw基本支持都已经导入到spring中,其他部分也讲述了每一个配置后边的原因;\
+ProfilingAspect 在这个例子中使用非常简单,但是十分有用,他是一个非常好的demo,开发时切面(能够被当前开发所使用的)并且当应用构建到一个UAT或者生产时能够容易的排除\
+##### Aspects
+您在 LTW 中使用的方面必须是 AspectJ 方面, 你能够通过aspectj 语言本身编写切面,要么使用@Aspectj风格的编写切面,你的切面可以同时是AspectJ以及 spring aop 切面,因此 编译好的切面类需要在类路径上;
+##### META-INF/aop.xml
+aspectj LTW 基础设施能够通过一个或者多个META-INF/aop.xml配置(直接在类路径上或者jar文件) \
+文件的结构和内容在Aspect 参考文档中有详细介绍[LTW](https://www.eclipse.org/aspectj/doc/released/devguide/ltw-configuration.html),因为
+aop.xml 文件是百分百AspectJ,不在这里过多描述;
+##### 需要的jars
+最少,你需要使用以下jar来支持 aspectJ  LTW;
+* spring-aop.jar
+* aspectjweaver.jar \
+如果你需要使用Spring 提供一个代理支持检测(instrumentation),可以:
+* spring-instrument.jar
+##### spring 配置
+关键组件配置(在spring ltw支持是 LoadTimeWeaver接口),并且各种各样的跟spring 发行的相关的实现,一个LoadTimeWeaver 有责任增加一个或者多个java.lang.instrument.ClassFilterTransformers 到类加载器(运行时),对于感兴趣的应用来说它打开了一扇门,其中之一就是切面的LTW; \
+如果你对运行时类转换的想法不熟悉,可以看一下java.lang.instrument包的api 文档,当然这个文档不是很全面,至少你能够查看关键接口以及类(供您阅读本节时参考) 、
+配置一个LoadTimeWeaver到一个特殊的应用上下文中能够非常简单(注意你只需要关心将Application作为你的Spring 容器,通常来说,BeanFactory 不够,因为LTW支持使用BeanFactoryPostProcessor); \
+为了启用Spring LWT支持,你需要配置一个LoadTimeWeaver,通常通过注解启动:
+```java
+@Configuration
+@EnableLoadTimeWeaving
+public class AppConfig {
+}
+```
+也可以是
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:load-time-weaver/>
+
+</beans>
+```
+之前的配置能够自动的定义和注册大量的LTW相关的基础设施类,例如LoadTimeWeaver以及AspectJWeavingEnabler,默认的LoadTimeWeaver 是DefaultContextLoadTimeWeaver 类,能够尝试去包装(通过自动检测的LoadTimeWeaver),LoadTimeWeaver的相关类型 将自动检测-依赖于你的运行时环境,以下列出了各种各样的LoadTimeWeaver实现:
+![loadTimeWeaver](./loadTimeWeaver.png) \
+注意这些LoadTimeWeaver实现仅仅在于你使用了DefaultContextLoadTimeWeaver才会自动检测,你能够指定你实际想要使用的LoadTimeWeaver \
+对于指定一个特殊的LoadTimeWeaver 通过java形式,你能够实现LoadTimeWeavingConfigurer接口并且覆盖getLoadTimeWeaver()方法,例如以下例子指定了一个ReflectiveLoadTimeWeaver:
+```java
+@Configuration
+@EnableLoadTimeWeaving
+public class AppConfig implements LoadTimeWeavingConfigurer {
+
+    @Override
+    public LoadTimeWeaver getLoadTimeWeaver() {
+        return new ReflectiveLoadTimeWeaver();
+    }
+}
+```
+能够能够基于xml形式
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:load-time-weaver
+            weaver-class="org.springframework.instrument.classloading.ReflectiveLoadTimeWeaver"/>
+
+</beans>
+```
+通过weaver-class属性设置类名,并且使用<context:load-time-weaver/> \
+loadTimeWeaver(记住LoadTimeWeaver指示一个spring的LTW基础设施的一个加载机制,能够增加一个或者多个ClassFileTransformers),实际的ClassFileTransformer 实际上操作LWT是一个ClassPreProcessorAgentAdapter(来自org.aspectj.weaver.loadtime),因为它指定了如何实际处理编织(这个知识已经超出这个文档的范围) \
+最后的一个讨论属性是aspectjWeaving,如果是xml那么就是 aspectj-weaving,这个属性控制了LTW是否启动,它接受三种可能的值,如果没有值出现默认就是autodetect,下面统计了三个值:
+* enabled 启动  aspectj编织启动,是所有的切面都将在加载时编织完成
+* disabled 关闭 ltw关闭,没有切面能够在运行时编织
+* autodetect 自动抉择 如果 spring ltw 基础设施能够发现一个META-INF/aop.xml那么就会开始aspect 编织,这是一个默认值;
+##### 环境相关的配置
+使用spring相关的环境加载机制加载必要的环境
+##### TOMCAT,JBoss,WebSphere,WebLogic
+tomcat,jboss/wildfly,ibm websphere 应用服务器以及oracle 的weblogic 服务器全部都提供了一个通用的应用  ClassLoader 对于本地的检测已经足够,spring的原生 LTW也许能够利用这些类加载实现去提供Aspectj weaving,你能够简单的启动load-time weaving,特别是你不需要修改Jvm启动脚本来增加一个 -javaagent: ...spring-instrument.jar\
+注意JBoss,你也许需要禁用app server 去扫描阻止它在应用实际启动之前加载这些类,一个解决办法就是增加一个归档文件为 WEB-INF/jboss-scanning.xml且配置以下内容
+```text
+<scanning xmlns="urn:jboss:scanning:1.0"/>
+```
+#### 通用应用上下文
+当需要在特定的LoadTimeWeaver实现所不支持的环境中进行类分析时,jvm agent就是通用解决方案,对于这样的原因,spring 提供了InstrumentationLoadTimeWeaver,他作为一个spring 相关的(但不是非常普遍)的jvm agent,spring-instrument.jar会自动通过@EnableLoadTimeWeaving 以及 <context:load-time-weaver>配置检测 \
+为了使用它:
+```text
+-javaagent:/path/to/spring-instrument.jar
+```
+注意它需要修改jvm 启动脚本,这也许会阻碍使用来自应用服务器的环境(依赖于你的服务器以及你的操作策略),也就是说,用于每一个jvm 应用程序的部署(例如单机Spring boot 应用),你通常需要控制整个jvm的配置 \
+##### 更多资源
+能够在AspectJ 站点发现更多切面知识 \

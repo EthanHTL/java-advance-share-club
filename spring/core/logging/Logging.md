@@ -1,0 +1,2 @@
+从spring5.0开始,spring 已经拥有了自己的通用日志桥接实现(在spring-jcl模块),这个实现检查log4j2.xapi以及Slf4j1.7api的存在,如果存在则首先将他们用作日志实现,否则使用java 平台核心日志工具(可以叫做jul或者 java.util.logging) \
+放置log4j2.x 或者 logback(或者其他slf4j提供者)到类路径上,不需要额外的桥接,框架能够自动适配我们的选择,对于更多信息查看[spring boot logging reference documention](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-logging)
