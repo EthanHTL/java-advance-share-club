@@ -216,7 +216,7 @@ public class MyWebAppInitializer extends AbstractDispatcherServletInitializer {
 ```
 每一个过滤器使用默认名称(基于它自己的具体的类型)并自动映射到DispatcherServlet;
 
-AstractDispatcherServletInitializer的isAsyncSupported保护方法提供了一个在DispatcherServlet中启动异步支持并映射所有过滤器给它,默认设置为true的;
+AbstractDispatcherServletInitializer的isAsyncSupported保护方法提供了一个在DispatcherServlet中启动异步支持并映射所有过滤器给它,默认设置为true的;
 #### 处理(processing)
 DispatcherServlet 处理请求根据以下:
 * WebApplicationContext 能够被搜索并且它被绑定为一个请求的属性(Controller 以及其他的元素在当前进程中能够使用它进行处理),默认通过DispatcherServlet.WEB_APPLICATION_CONTEXT_ATTRIBUTE key绑定;
