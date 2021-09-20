@@ -141,4 +141,54 @@ MultipartHttpMessageReader 以及 MultipartHttpMessageWriter 支持编码以及�
 在服务器端当multipart表单内容可以需要在多次访问,ServerWebExchange提供了专用的getMultipartData()并通过MultipartHttpMessageReader解析并缓存结果,便于重复访问,查看[Multipart Data](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-multipart)在WebHandler API的部分! \
 一旦getMultipartData()使用,原始的内容不再从请求体中获取,应用为了一致性调用使用getMultipartData进行重复获取数据调用作了努力,类似map的访问部分数据,否则只能通过SynchronossPartHttpMessageReader来进行单次访问Flux<Part>
 #### limits
-Decoder 以及HttpMessageReader实现是缓存一些或者输入的全部(但是能够通过在内存中限制缓冲区的最大缓冲数量),在某些情况下缓存会出现因为输入会被聚合并且作为单个对象呈现-举个例子,拥有@RequestBody byte[],x-www-form-urlencoded数据的控制器方法,以及其他!
+Decoder 以及HttpMessageReader实现是缓存一些或者输入的全部(但是能够通过在内存中限制缓冲区的最大缓冲数量),在某些情况下缓存会出现因为输入会被聚合并且作为单个对象呈现-举个例子,拥有@RequestBody byte[],x-www-form-urlencoded数据的控制器方法,以及其他! \
+缓存在流中也会发生,当分割输入流的时候-举个例子,分割的文本,JSON对象的一个流以及其他,对于这些流的情况,限制应用的字节数量与流中的一个对象相联系; \
+对于配置的缓冲区的尺寸,你能够检查(如果一个给定的Decoder或者HttpMessageReader暴露了一个maxInMemorySize属性并且javadoc会包含默认值的详细信息),在服务器端,ServerCodecConfigurer提供了形式可以设置所有的编码器,查看[Http Message codec](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-config-message-codecs),在客户端所有编码器的限制都能够在WebClient.Builder中改变 \
+对于多部分解析，maxInMemorySize 属性限制了非文件部分的大小,对于文件部分,它决定了这一部分写入到磁盘的阈值. 对于写入磁盘的文件部分,这里有一个额外的maxDiskUsagePerPart属性去限制每一个部分所占用的磁盘空间总量,这里也有一个maxParts属性去限制在multipart请求中parts的所有数量,为了将三种都配置在WebFlux中,你需要应用一个预先配置的MultipartHttpMessageReader到ServerCodecConfigurer上! \
+#### Streaming
+当将流输入到HttpResponse(举个例子,text/event-stream,application/x-ndjson),周期性发送数据是非常重要的,为了可靠的检查失联的客户端(立刻)-而不是以后,例如一个发送可能是仅仅有注释,空的SSE事件或者任何"no-op"的数据-只要能够有效的作为一个心跳! \
+#### DataBuffer
+DataBuffer在WebFlux中是一个字节buffer的呈现,这是Spring的核心部分-更多的在【Data Buffers and Codecs](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/core.html#databuffers)进行说明,关键点在于理解-例如在某些服务器上，如Netty,字节buffer能够池化并且可以引用计数,并且能够被释放-当消费完毕的时候,避免内存泄漏! \
+WebFlux应用通常不需要考虑这些细节,蹙非它们直接消费或者向buffer中生产数据,相反依靠编码器来回转换高级对象的转换,或者除非它们选择创建自定义的编码器! 对于这些情况请参考Data Buffers and Codecs的文档,特别是使用[DataBuffer](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/core.html#databuffers-using)的文档!
+### Logging
+Debug级别在SpringFlux中被设计为紧凑的,最小化的以及对人类友好的. 主要集中信息输出非常高有用(反复)-相比于针对指定疑问进行调试的时候更加友好! \
+#### LogId
+webFlux中有可能一个请求出现在多个线程之中(线程id作为指定请求的日志号不合适),这就是为什么WebFlux日志消息都默认以请求相关的信息作为ID前缀! \
+在服务器端,日志ID存储在ServerWebExchange属性(LOG_ID_ATTRIBUTE),当一个完全格式化的ID的前缀可以通过ServerWebExchange#getLogPrefix()进行修改,在WebClient端,日志ID是存储在ClientRequest的属性中(LOG_ID_ATTRIBUTE),获取日志前缀同样可以通过 ClientRequest#getPrefix() \
+####Sensitive Data
+debug以及trace能够记录许多敏感信息，这就是为什么表单参数以及请求头默认标记并且你需要显示的启用它们被记录(全面) \
+下面的例子中展示了如何处理server-side请求:
+```text
+@Configuration
+@EnableWebFlux
+class MyConfig implements WebFluxConfigurer {
+
+    @Override
+    public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
+        configurer.defaultCodecs().enableLoggingRequestDetails(true);
+    }
+}
+```
+下面的例子展示了如何处理客户端请求:
+```text
+Consumer<ClientCodecConfigurer> consumer = configurer ->
+        configurer.defaultCodecs().enableLoggingRequestDetails(true);
+
+WebClient webClient = WebClient.builder()
+        .exchangeStrategies(strategies -> strategies.codecs(consumer))
+        .build();
+```
+#### Appenders
+日志类库slf4j以及log4j2提供了异步记录工具类能够避免阻塞,当然这些有它们自己的缺点，例如潜在的删除消息(不能够对入队的消息进行删除),它们也有可取之处(在响应式、非阻塞式的应用中)
+#### 自定义编码器
+应用能够注册自定义的编码器来支持其他可选的媒体类型,或者指定的行为-不被当前默认的编码器所支持的行为 \
+有些配置选项能够开发者强制的加到默认编码器上,自定义的编码器可能想要一个机会和这些首选项对齐,例如强制限制缓冲大小以及记录敏感日志! \
+例如下面的例子展示了如何对客户端请求进行操作: 
+```text
+WebClient webClient = WebClient.builder()
+        .codecs(configurer -> {
+                CustomDecoder decoder = new CustomDecoder();
+                configurer.customCodecs().registerWithDefaultConfig(decoder);
+        })
+        .build();
+```
