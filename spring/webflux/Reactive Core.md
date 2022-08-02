@@ -71,7 +71,7 @@ org.springframework.web.server 包 基于HttpHandler的约定下提供了一个�
 #### Special bean type
 下面的表所列出的组件是WebHttpHandlerBuilder
 能够在Spring 应用上下文中能够自动检测的或者能够通过它直接注册的 \
-beanName     BeanType    Count      Description
+beanName     BeanType    Count      Description \
 <any>   WebExceptionHandler    0...N 提供了处理来自WebFilter实例链以及目标WebHandler异常,为了获取更多，查看异常! \
 <any>   WebFilter  0..N   应用拦截风格逻辑在过滤器链以及目标WebHandler的其他地方前后进行处理! \
 webHandler   WebHandler  1 针对请求的处理器 \
@@ -108,7 +108,7 @@ webflux 提供了细腻化的跨域支持(通过在控制器上放置注解),然
 #### 异常
 在WebHandler API中,你能够使用一个WebExceptionHandler 去处理一个来自WebFilter实例链以及目标WebHandler的异常. 当使用WebFlux配置时,注册一个WebExceptionHandler 非常简单-并且可以作为一个bean,通过实现Ordered接口以及@Order注解调整优先级! \
 下面的表描述了必要的WebExceptionHandler实现:
-Exception Handler   Description
+Exception Handler   Description \
 ResponseStatusExceptionHandler 提供了ResponseStatusException的异常处理-通过设置响应的异常Http状态码 \
 WebFluxResponseStatusExceptionHandler ResponseStatusExceptionHandler的扩展-它能够检测任何通过@ResponseStatus注解到异常上的任何Http状态码,这个处理器在[WebFlux Config](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-config)中声明!
 ###Codecs 
@@ -149,7 +149,7 @@ Decoder 以及HttpMessageReader实现是缓存一些或者输入的全部(但是
 当将流输入到HttpResponse(举个例子,text/event-stream,application/x-ndjson),周期性发送数据是非常重要的,为了可靠的检查失联的客户端(立刻)-而不是以后,例如一个发送可能是仅仅有注释,空的SSE事件或者任何"no-op"的数据-只要能够有效的作为一个心跳! \
 #### DataBuffer
 DataBuffer在WebFlux中是一个字节buffer的呈现,这是Spring的核心部分-更多的在【Data Buffers and Codecs](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/core.html#databuffers)进行说明,关键点在于理解-例如在某些服务器上，如Netty,字节buffer能够池化并且可以引用计数,并且能够被释放-当消费完毕的时候,避免内存泄漏! \
-WebFlux应用通常不需要考虑这些细节,蹙非它们直接消费或者向buffer中生产数据,相反依靠编码器来回转换高级对象的转换,或者除非它们选择创建自定义的编码器! 对于这些情况请参考Data Buffers and Codecs的文档,特别是使用[DataBuffer](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/core.html#databuffers-using)的文档!
+WebFlux应用通常不需要考虑这些细节,除非它们直接消费或者向buffer中生产数据,相反依靠编码器来回转换高级对象的转换,或者除非它们选择创建自定义的编码器! 对于这些情况请参考Data Buffers and Codecs的文档,特别是使用[DataBuffer](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/core.html#databuffers-using)的文档!
 ### Logging
 Debug级别在SpringFlux中被设计为紧凑的,最小化的以及对人类友好的. 主要集中信息输出非常高有用(反复)-相比于针对指定疑问进行调试的时候更加友好! \
 #### LogId

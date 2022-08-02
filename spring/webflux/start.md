@@ -36,7 +36,7 @@ Spring mvc 或者 webFlux?
 * 评估一个应用最简单的方式就是检查它的依赖,如果你有阻塞式的持久化API(JPA,JDBC)或者网络API在使用,Spring mvc 对于大多数架构来说至少是最合适的选择,虽然在Reactor 以及RxJava中执行阻塞式调用(在不同线程执行)技术上可行,但是这并没有利用非阻塞式框架的最大好处!
 * 如果你有一个spring mvc应用并且需要调用远程服务,尝试使用reactive WebClient,你能够返回响应式类型(Reactor,RxJava或者[更多](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-reactive-libraries))-直接从Spring mvc控制器方法上返回。 每个调用的延迟（latency)或调用之间的相互依赖性越大，好处就越大. Spring mvc controller 也能够调用其他的响应式组件!
 * 如果有一个大的团队,请记住在转向非阻塞,函数式、声明式编程过程中的陡峭学习曲线,一个典型的例子就是开始没有完全切换到使用响应式WebClient. 除此之外,从小处着手并衡量收益. 我们期望这样,对于一个更加宽广的应用程序，这种偏移是不必要的,如果您不确定要寻找什么好处
- ,通过学习怎样进行非阻塞式I/O工作(例如  在单线程中国的Node.js并发)以及它的效率！
+ ,通过学习怎样进行非阻塞式I/O工作(例如  在单线程中的Node.js并发)以及它的效率！
  ### 服务器
  反正就是适配,Spring WebFlux 并没有对启动或者关闭服务器进行支持,然而它非常容易通过Spring 配置以及 [WebFlux infrastructure](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-config)并且包含了一少段代码的应用! \
  SpringBoot 拥有WebFlux的starter(能够自动构建这些步骤),默认来说,starter使用Netty,但是也非常容易切换为Tomcat或者Jetty或者其他的(通过改变maven依赖或者grade依赖即可),Spring Boot默认使用Netty,因为它性能更高(异步),非阻塞式空间并且允许客户端以及服务器共享资源! \
@@ -58,7 +58,7 @@ Spring mvc 或者 webFlux?
  在具有Spring WebFlux的服务器上应该有多少个线程!
 * 在一个"vanilla"的Spring WebFlux服务器上(例如,没有数据访问或者说没有其他的可选依赖)，你可以期待一个线程用于服务器、其他几个线程用于请求处理(通常线程的数量和CPU内核数一样多),Servlet Containers,然而一开始可能需要更多的线程(例如 tomcat中 10个),同时支持Servlet (阻塞式IO)以及Servlet 3.1的非阻塞式I/O使用
 *  WebClient 以事件循环样式运行,因此你能够看见一个更小的、固定线程进行处理(例如,reactor-http-nio-包含着Reactor Netty连接器),然而,如果Reactor Netty同时在用在客户端以及服务器，那么两者默认共享事件循环资源!
-* Reactor 以及 RxJava 提供了线程池抽象,叫做调度器,为了使用包含了publishOn操作符-被用来将处理切换到不同的线程池. 这个调度器有一个名称(建议使用一个指定的并发策略-例如:  并行) - (包含指定限制的线程的CPU约束任务)或者 灵活的(使用大的线程池的IO帮绑定工作),如果你需要查看这些线程,可以使用指定了线程池'Scheduler'策略
+* Reactor 以及 RxJava 提供了线程池抽象,叫做调度器,为了使用包含了publishOn操作符-被用来将处理切换到不同的线程池. 这个调度器有一个名称(建议使用一个指定的并发策略-例如:  并行) - (包含指定限制的线程的CPU约束任务)或者 灵活的(使用大的线程池的IO绑定工作),如果你需要查看这些线程,可以使用指定了线程池'Scheduler'策略
 *数据访问类库 以及其他的第三方依赖也能够创建并通过它们自己的方式使用线程!
 #### configuring
 spring 框架并没有提供启动、关闭服务器的支持，为了配置服务器的线程模型,你需要使用特定于服务器的配置API，或者,你能够使用Spring Boot,检查SpringBoot针对于每一个Server的依赖,你能够直接配置WebClient,对于其他的类库,查看它们各自的文档!

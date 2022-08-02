@@ -15,7 +15,7 @@ HttpHandler handler = WebHttpHandlerBuilder.applicationContext(context).build();
 ### Special Bean Types
 DispatcherHandler 代理指定的bean来处理请求以及渲染合适的响应,通过"special beans",我们明白Spring管理的对象Object实例实现了WebFlux框架的合约,这些通常往往是内置约定,但是你能够定制它们的属性、扩展它们或者替换它们! \
 下面的列表展示了会被DispatcherHandler检测的special bean,注意它们有些其他的bean会在底层被检测(查看[Special  bean types](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-httphandler)-在WebHandler api中的[special bean types](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-web-handler-api-special-beans)) \
-bean type              explanation
+bean type              explanation \
 HandlerMapping 映射一个请求到处理器,这个映射基于某些条件,详细信息需要查看HandlerMapping的实现-注解的controller或者简单的URL 模式映射,以及其他,主要HandlerMapping实现是一个RequestMappingHandlerMapping 用来处理@RequestMapping注解的方法,RouterFunctionMapping针对函数式端点路由,以及SimpleUrlHandlerMapping针对显示的URL路径模式注册以及WebHandler实例到指定的WebHandler处理!  \
 HandlerAdapter 帮助DipatcherHandler执行已经映射的一个处理器方法,不管实际处理器如何执行,举个例子执行一个注解的controller需要解析注解,HandlerAdapter 保护-(shield)屏蔽DispatcherHandler的细节! \
 HandlerResultHandler 处理处理器执行的结果并且终结响应,查看[Result Handling](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-resulthandling)
@@ -29,10 +29,10 @@ DispatcherHandler 处理请求如下:
 - HandlerResult会通过合适的HandlerResultHandler去完成处理-通过直接写入响应或者通过视图进行渲染!
 ### Result Handling
 处理一个来至处理器执行的结果,通过HandlerAdapter进行执行，将包装为一个HandlerResult,连同有些可选的上下文,并传递给第一个声称(Claims)支持它的 HandlerResultHandler,下面的表展示了可用的HandlerResultHandler实现,所有都已经在WebFlux配置中声明! \
-Result Handler Type     Return Values   Default Order
+Result Handler Type     Return Values   Default Order \
 ResponseEntityResultHandler |  ResponseEntity,typically from @Controller instantces | 0
 ServerResponseResultHandler | ServerResponse,通常是函数式端点的结果  |  0
-ResponseBodyResultHandler | 处理来至@ResponseBody的方法的返回值或者@RestController类的返回值 |  100
+ResponseBodyResultHandler | 处理来至@ResponseBody的方法的返回值或者@RestController类的返回值 |  100\
 ViewResolutionResultHandler | CharSequence,View,Model,Map,Rendering,或者其他的对象-能够作为一个模型属性的对象[View Resolution](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/web-reactive.html#webflux-viewresolution) | Integer.MAX_VALUE
 
 ### 异常

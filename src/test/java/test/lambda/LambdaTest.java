@@ -1,5 +1,6 @@
 package test.lambda;
 
+
 import org.junit.Test;
 
 import java.util.Collection;
