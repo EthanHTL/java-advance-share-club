@@ -170,7 +170,7 @@ someArray[0].someProperty.someOtherProperty < 0.1
    *  OFF (默认选择)
    *  IMMEDIATE 快速模式(尽可能快的编译),通常是第一次解析评估,如果编译表达式失败(通常是由于类型改变),表达式评估的调用者接收一个异常;
    *  MIXED 在解析和编译模式下切换,有些时候编译失败之后可能会转为解析形式重试,一般来说用户进入 IMMEDIATE 模式的异常是在内部处理的 \
-IMMEDIATE模式退出是因为MIXED模式可能会对表达式造成副作用,如果编译表达式部分成功之后出错,他可能已经完成了某些事情(对系统的状态可能造成了影响),如果发生,调用者可能不想它安静的再运行在解释模式,因此表达式可能有两种运行选择(一半解释、一半编译) \
+IMMEDIATE模式退出是因为MIXED模式可能会对表达式造成副作用,如果编译表达式部分成功之后出错,他可能已经完成了某些事情(对系统的状态可能造成了影响),如果发生,调用者可能不想它安静的再运行在解释模式,因此表达式的部分可能会运行两次 \
 选择模式之后,使用SpelParserConfiguration 配置到parser中,例如:
 ```java
 SpelParserConfiguration config = new SpelParserConfiguration(SpelCompilerMode.IMMEDIATE,
