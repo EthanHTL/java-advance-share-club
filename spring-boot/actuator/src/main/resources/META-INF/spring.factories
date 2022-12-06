@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=club.smileboy.app.common.deferred.DeferedValue, \
+  club.smileboy.app.v2.Value5
