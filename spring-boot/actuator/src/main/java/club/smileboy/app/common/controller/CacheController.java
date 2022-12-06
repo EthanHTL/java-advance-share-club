@@ -1,4 +1,4 @@
-package club.smileboy.app.controller;
+package club.smileboy.app.common.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;

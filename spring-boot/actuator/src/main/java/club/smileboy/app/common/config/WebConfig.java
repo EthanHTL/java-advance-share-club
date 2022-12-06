@@ -1,14 +1,14 @@
-package club.smileboy.app.config;
+package club.smileboy.app.common.config;
 
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.boot.actuate.audit.InMemoryAuditEventRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import javax.sql.DataSource;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
 public class WebConfig {
+
     @Bean
     public AuditEventRepository auditEventRepository() {
         return new InMemoryAuditEventRepository();

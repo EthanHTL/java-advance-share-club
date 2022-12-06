@@ -1,11 +1,14 @@
-package club.smileboy.app.config;
+package club.smileboy.app.common;
 
+import club.smileboy.app.common.deferred.DeferedValueV2Selector;
+import club.smileboy.app.common.imported.MyImportBeanDefinitionRegistrar;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-
+@Import({DeferedValueV2Selector.class, MyImportBeanDefinitionRegistrar.class})
 @Configuration
 public class SecurityConfiguration {
     /**

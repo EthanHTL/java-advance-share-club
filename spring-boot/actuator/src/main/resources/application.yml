@@ -24,4 +24,15 @@ spring:
       name: user
       password: 123456
       roles: admin,manager
+  aop:
+    # 解决 cglib 匹配 aop 切入点条件的问题
+    proxy-target-class: false
+    auto: true
 
+
+info:
+  app:
+    encoding: UTF-8
+    java:
+      source: 11
+      target: 11
