@@ -1,0 +1,23 @@
+//module java.advance.share.club {
+//
+//    requires java.base;
+//    requires spring.aop;
+//    requires spring.beans;
+//    requires spring.core;
+//    requires spring.expression;
+//    requires spring.context;
+//    requires spring.web;
+//    requires spring.aspects;
+//    requires org.aspectj.weaver;
+//    requires lombok;
+//    requires java.annotation;
+//
+//
+//
+//    exports aop.aop.pcd;
+//    opens aop.aop.pcd;
+//}
+
+// 使用了模块之后,需要将模块进行开放 --add-opens java.base/java.lang=spring.core
+
+// 非模块化,默认需要暴露两个模块 java.base/java.lang=.... java.base/java.reflect=...
