@@ -1,5 +1,6 @@
 package club.smileboy.app.common.aop;
 
+import club.smileboy.app.common.aop.weave.bean.EntitlementCalculationService;
 import club.smileboy.app.v2.Value5;
 import org.springframework.aop.*;
 import org.springframework.aop.aspectj.TypePatternClassFilter;
@@ -42,6 +43,7 @@ import java.lang.reflect.Method;
  *
  *
  */
+//@Import(DefaultImportor.class)
 @Configuration
 public class AopBasedStudy {
 

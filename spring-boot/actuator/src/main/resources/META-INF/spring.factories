@@ -1,2 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=club.smileboy.app.common.deferred.DeferedValue, \
-  club.smileboy.app.v2.Value5
+  club.smileboy.app.v2.Value5, \
+  club.smileboy.app.common.aop.weave.DefaultImportor
+
+#org.springframework.context.ApplicationContextInitializer=club.smileboy.app.common.aop.weave.BugFixApplicationContextInitializer

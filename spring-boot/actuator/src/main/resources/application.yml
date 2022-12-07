@@ -28,7 +28,9 @@ spring:
     # 解决 cglib 匹配 aop 切入点条件的问题
     proxy-target-class: false
     auto: true
-
+    # 自定义属性
+  aspectj:
+    enableLTW: AUTODETECT
 
 info:
   app:

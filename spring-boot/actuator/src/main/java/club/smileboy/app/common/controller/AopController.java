@@ -4,6 +4,7 @@ import club.smileboy.app.common.aop.AopBasedStudy;
 import club.smileboy.app.common.aop.AopTargetBean;
 import club.smileboy.app.common.aop.AopTargetBean1;
 import club.smileboy.app.common.aop.LazyComponent;
+import club.smileboy.app.common.aop.weave.bean.EntitlementCalculationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,9 @@ public class AopController {
 
 //    @Autowired
 //    AopTargetBean aopTarget2;
+
+    @Autowired
+    EntitlementCalculationService service;
 
     @GetMapping
     public void methodInvoke() {
@@ -50,4 +54,12 @@ public class AopController {
     public void lazy() {
         System.out.println(lazyComponent);
     }
+
+    @GetMapping("entitle")
+    public void entitle() throws InterruptedException {
+        service.calculateEntitlement();
+    }
+
+
+
 }

@@ -734,3 +734,13 @@ public Object doConcurrentOperation(ProceedingJoinPoint pjp) throws Throwable {
 Eclipse的  AspectJ Development Tools (AJDT)插件,其他ide(或者不是主要角色的应用,可以直接使用@Aspectj注解风格),坚持使用普通java编译,并在构建脚本中增加切面编织阶段 ..
 
 ### 5.6.2 @Aspectj 或者xml (为spring aop 选择)
+xml有优势也是缺点,优势是能够清晰的看出切面所包含的相关内容,但是缺点就是没有形成一个模块,比较分散,两种根据开发者喜好选择 ..
+
+## 5.10 spring 结合AspectJ
+## 5.10.1 切面通过spring 进行依赖注入
+
+### 5.10.2 其他切面
+
+### 5.10.3 通过使用ioc配置AspectJ 切面
+
+### 5.10.4 在spring框架中使用Aspectj加载时编织

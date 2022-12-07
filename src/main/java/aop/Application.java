@@ -11,6 +11,7 @@ import java.util.Scanner;
  * @dateTime: 2021-05-30 08:40:51
  * @description: application
  */
+@EnableLoadTimeWeaving
 public class Application {
     public static void main(String[] args) {
         final AnnotationConfigApplicationContext configApplicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
