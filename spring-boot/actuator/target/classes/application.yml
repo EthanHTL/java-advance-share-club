@@ -1,0 +1,40 @@
+server:
+  port: 8080
+management:
+  endpoint:
+    auditevents:
+      cache:
+        # 直接设置1分钟,但是audit events 本身不支持响应缓存 ...
+        time-to-live: 1m
+  auditevents:
+    enabled: true
+  endpoints:
+    web:
+      exposure:
+        # 相当于暴露所有
+        include: "*"
+#        include: auditevents,health,info,beans,caches,conditions,configprops,env,flyway,httptrace,integrationgraph,liquibase,metrics,shutdown
+spring:
+  application:
+    # 会影响 configprops中的 contexts.*(也就是标识哪一个应用 ...)
+    name: actuator-demo
+    # 这里使用最简单的spring security 场景,主要通过它来记录一些audit 事件
+  security:
+    user:
+      name: user
+      password: 123456
+      roles: admin,manager
+  aop:
+    # 解决 cglib 匹配 aop 切入点条件的问题
+    proxy-target-class: false
+    auto: true
+    # 自定义属性
+  aspectj:
+    enableLTW: AUTODETECT
+
+info:
+  app:
+    encoding: UTF-8
+    java:
+      source: 11
+      target: 11
