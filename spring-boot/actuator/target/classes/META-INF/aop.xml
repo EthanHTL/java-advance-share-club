@@ -3,6 +3,7 @@
 
     <weaver options="-verbose -showWeaveInfo">
         <!-- only weave classes in our application-specific packages -->
+<!--         这个目标编制类的范围需要和切面的包是相同的 ..-->
         <include within="club.smileboy.app.common.aop.weave..*"/>
     </weaver>
 

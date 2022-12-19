@@ -13,7 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @EnableCaching
-@EnableLoadTimeWeaving
+//@EnableLoadTimeWeaving
 //@ImportResource("classpath:aop-load-time-weaver.xml")
 @SpringBootApplication(scanBasePackages = "club.smileboy.app.common")
 public class WebApplication {

@@ -4,6 +4,7 @@ import club.smileboy.app.common.aop.AopBasedStudy;
 import club.smileboy.app.common.aop.AopTargetBean;
 import club.smileboy.app.common.aop.AopTargetBean1;
 import club.smileboy.app.common.aop.LazyComponent;
+import club.smileboy.app.common.aop.commons.candidate.DefaultService;
 import club.smileboy.app.common.aop.weave.bean.EntitlementCalculationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -28,6 +29,9 @@ public class AopController {
 
     @Autowired
     EntitlementCalculationService service;
+
+    @Autowired
+    DefaultService defaultService;
 
     @GetMapping
     public void methodInvoke() {
@@ -58,6 +62,12 @@ public class AopController {
     @GetMapping("entitle")
     public void entitle() throws InterruptedException {
         service.calculateEntitlement();
+    }
+
+    @GetMapping("mixin")
+    public void mixin() {
+        // A ,你觉得它是B??
+        defaultService.printf();
     }
 
 
