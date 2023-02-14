@@ -1,4 +1,4 @@
-package org.example.spring.test;
+package org.example.spring.test.integration.support.each;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

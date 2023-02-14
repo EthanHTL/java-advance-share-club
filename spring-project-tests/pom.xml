@@ -14,6 +14,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>spring-test-project-test</module>
+        <module>spring-framework-data-access-project-test</module>
     </modules>
 
     <properties>

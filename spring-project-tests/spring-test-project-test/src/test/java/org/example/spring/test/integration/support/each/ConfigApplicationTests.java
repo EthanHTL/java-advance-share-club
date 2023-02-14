@@ -1,4 +1,4 @@
-package org.example.spring.test;
+package org.example.spring.test.integration.support.each;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -67,7 +67,7 @@ public class ConfigApplicationTests {
     // ApplicationContext will be loaded from the static nested Config class
     public static class MyConfigApplication2Tests {
 
-        interface OrderService {
+        public interface OrderService {
 
         }
 

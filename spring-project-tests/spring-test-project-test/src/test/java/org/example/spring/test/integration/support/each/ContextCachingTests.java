@@ -1,4 +1,4 @@
-package org.example.spring.test;
+package org.example.spring.test.integration.support.each;
 /**
  * @date 2022/12/24
  * @time 17:46
