@@ -1365,3 +1365,347 @@ public class TitlesAfterDateStoredProcedure extends StoredProcedure {
 ```
 
 ### 3.8 参数和日期值处理的常见问题 ..
+参数和数据值的常见问题出现在由spring框架jdbc 支持所提供的各种方式中 ... 这部分描述了如何解决它们 ..
+
+### 3.8.1 为参数提供SQL Type信息
+通常,Spring 基于传递的参数类型决定参数的SQL 类型 。。 它能够在设置参数值的时候显式的提供SQL 类型 .. 有时时候需要
+需要正确的处理NULL 值 .. \
+你能够通过各种形式设置SQL 类型信息 ..
+- JdbcTemplate的许多更新和查询方法都需要int数组的形式的额外参数.. 这个数组被用来指示相关参数的SQL 类型 - 通过
+使用来自java.sql.Types类的约束值 .. 为每一个参数提供一个项 ...
+- 你能够使用SqlParameterValue类去包装需要额外信息的参数值 . 为了这样做,为每一个值创建新的实例 并传递SQL 类型 以及
+参数值到构造器中,你还能够为数值化值提供额外的精度参数 ..
+- 对于根据命名参数工作的方法,你能够使用SqlParameterSource类,BeanPropertySqlParameterSource 或者 MapSqlParameterSource ..
+它们同时包含了为任何命名参数值注册SQL类型的方法 ....
+
+### 3.8.2 处理BLOB 以及 CLOB 对象
+你能够存储图片，其他二进制数据，以及大块的文本到数据库中... 这些大对象叫做二进制数据的BLOBs - (二进制大对象) 以及 CLOBs(字符大对象) - 针对字符数据
+在Spring中，可以通过JdbcTemplate 直接处理这些大对象 同样当使用由RDBMS对象提供的高级抽象 以及SimpleJdbc类 ..也能使用 ..
+所有的这些方式使用LobHandler接口的抽象实现 进行LOB(大对象 Large Object)数据的实际管理 ..
+LobHandler 提供了LobCreator类的访问,通过getLobCreator方法,能够被用来创建被插入的新的LOB对象 ..
+
+LobCreator 以及 LobHandler 提供了对LOB输入和输出的以下支持:
+- BLOB
+  - byte[]: getBlobAsBytes 以及 setBlobAsBytes
+  - InputStream: getBlobAsBinaryStream 以及 setBlobAsBinaryStream
+- CLOB
+  - String: getClobAsString 以及 setClobAsString
+  - InputStream: getClobAsAsciiStream 以及 setClobAsAsciiStream
+  - Reader: getClobAsCharacterStream 以及 setClobAsCharacterStream
+以下的示例中展示了如何创建并插入一个BLOB,后面展示如何从数据库读取它进行返回 ..
+这个示例中使用了JdbcTemplate 以及 一个AbstractLobCreatingPreparedStatementCallback ..
+  - 它实现了一个方法,setValues ..这个方法提供了能让一个LobCreator 能够用来设置SQl插入语句的Lob 字段的值 ..
+
+这个示例中,我们假设这有一个变量,lobHandler, 这里已经设置了一个DefaultLobHandler的实例 ..
+你通常可以通过依赖注入设置值:
+以下的示例中展示了如何创建并插入BLOB:
+```java
+final File blobIn = new File("spring2004.jpg");
+final InputStream blobIs = new FileInputStream(blobIn);
+final File clobIn = new File("large.txt");
+final InputStream clobIs = new FileInputStream(clobIn);
+final InputStreamReader clobReader = new InputStreamReader(clobIs);
+
+jdbcTemplate.execute(
+    "INSERT INTO lob_table (id, a_clob, a_blob) VALUES (?, ?, ?)",
+    new AbstractLobCreatingPreparedStatementCallback(lobHandler) {  (1)
+        protected void setValues(PreparedStatement ps, LobCreator lobCreator) throws SQLException {
+            ps.setLong(1, 1L);
+            lobCreator.setClobAsCharacterStream(ps, 2, clobReader, (int)clobIn.length());  (2)
+            lobCreator.setBlobAsBinaryStream(ps, 3, blobIs, (int)blobIn.length());  (3)
+        }
+    }
+);
+
+blobIs.close();
+clobReader.close();
+```
+> 如果你执行这些方法,例如: 如果在从DefaultLobHandler.getLobCreator() 返回的LObCreator上设置setBlobAsBinaryStream,setClobAsAsciiStream或者 setClobAsCharacterStream 
+> 你能够可选的指定为contentLength参数指定一个负数 .. 如果你指定的内容长度是负数,那么DefaultLobHandler使用没有长度参数的set-stream方法的
+> JDBC 4.0变种.. 否则它将传递指定的长度到驱动上 ..
+> 查看JDBC驱动的文档 - 你能够验证它是否支持不提供内容长度的LOB的流化 ..
+
+现在是时候从数据库中读取 LOB 数据了。同样，您使用具有相同实例变量 lobHandler 和对 DefaultLobHandler 的引用的 JdbcTemplate。
+以下示例显示了如何执行此操作：
+```java
+List<Map<String, Object>> l = jdbcTemplate.query("select id, a_clob, a_blob from lob_table",
+    new RowMapper<Map<String, Object>>() {
+        public Map<String, Object> mapRow(ResultSet rs, int i) throws SQLException {
+            Map<String, Object> results = new HashMap<String, Object>();
+            String clobText = lobHandler.getClobAsString(rs, "a_clob");  (1)
+            results.put("CLOB", clobText);
+            byte[] blobBytes = lobHandler.getBlobAsBytes(rs, "a_blob");  (2)
+            results.put("BLOB", blobBytes);
+            return results;
+        }
+    });
+```
+
+### 3.8.3  传递list值 到 in 断言(子句)
+SQL标准允许 基于包括了值的变量列表表达式选择行. 通常一个示例是' select * from T_ACTOR where id in (1,2,3)' .
+这个变量列表并没有由JDBC标准直接为预备语句提供 .. 你不能够声明可变数量的占位符 .. 您需要准备好所需数量的占位符的多种变体.
+或者你需要动态生成SQL字符串 - 一旦你知道有多少占位符是必须的 .. NamedParameterJdbcTemplate 和 JdbcTemplate 中提供的命名参数支持采用后一种方式。
+你能够将传递的值作为原始对象的java.util.List.. 这个列表被用来插入需要占位符 并在语句执行过程中传入这些值 ..
+> 当你传递许多值的时候,需要小心. 这个JDBC标准并没有保证你能够超过100个值在in 表达式列表中 ..
+> 各种数据库都超过了这个数字,但是它通常有一个硬的限制到底多少值是允许的 .. 例如 oracle 限制是 1000 ...
+
+除了数值列表中的原始值,你能够创建对象数组的java.util.List ... 这个列表能够支持定义在in子句中的多个表达式,例如 `select * from T_ACTOR where
+(id,last_name) in ((1,'johnson'),(2,'Harrop'))` ..
+当然,需要你的数据库支持这个语法 ...
+### 3.8.4 处理复杂类型的存储过程的调用
+当你调用存储过程,你有时能够使用特定于数据库的复杂类型 .. 为了容纳这些类型,Spring 提供一个SqlReturnType 来处理它们 - 当它们从
+存储过程调用返回的时候 以及 当使用SqlTypeValue 作为参数传递到存储过程中 ...
+SqlReturnType 接口包含了单个方法(命名为getTypeValue) 必须实现,这个接口被用来作为 SqlOutParameter的部分声明 ..
+以下的示例展示了一个Oracle 的用户声明类型ITEM_VALUE的STRUCT对象的返回值:
+```java
+public class TestItemStoredProcedure extends StoredProcedure {
+
+    public TestItemStoredProcedure(DataSource dataSource) {
+        // ...
+        declareParameter(new SqlOutParameter("item", OracleTypes.STRUCT, "ITEM_TYPE",
+            (CallableStatement cs, int colIndx, int sqlType, String typeName) -> {
+                STRUCT struct = (STRUCT) cs.getObject(colIndx);
+                Object[] attr = struct.getAttributes();
+                TestItem item = new TestItem();
+                item.setId(((Number) attr[0]).longValue());
+                item.setDescription((String) attr[1]);
+                item.setExpirationDate((java.util.Date) attr[2]);
+                return item;
+            }));
+        // ...
+    }
+```
+你能够使用SqlTypeValue 去传递java对象的值(例如 TestItem)到存储过程中 ..
+SqlTypeValue 接口包含了单个方法(命名为 createTypeValue)必须实现 .. 
+此方法包含传递的激活的连接,并且你能够使用它去创建数据库特定的对象, 例如StructDescriptor 示例或者ArrayDescriptor 示例 ..
+以下的示例创建StructDescriptor 示例:
+```java
+final TestItem testItem = new TestItem(123L, "A test item",
+        new SimpleDateFormat("yyyy-M-d").parse("2010-12-31"));
+
+SqlTypeValue value = new AbstractSqlTypeValue() {
+    protected Object createTypeValue(Connection conn, int sqlType, String typeName) throws SQLException {
+        StructDescriptor itemDescriptor = new StructDescriptor(typeName, conn);
+        Struct item = new STRUCT(itemDescriptor, conn,
+        new Object[] {
+            testItem.getId(),
+            testItem.getDescription(),
+            new java.sql.Date(testItem.getExpirationDate().getTime())
+        });
+        return item;
+    }
+};
+```
+你现在能够增加SqlTypeValue 到包含存储过程的execute调用的输入参数的Map  ..
+对SqlTypeValue的另用是传递值的数组到Oracle 存储过程 ... Oracle 有它自己的內部ARRAY类 - 在这种情况下必须使用..
+并且你能够使用SqlTypeValue 去创建一个Oracle ARRAY的实例 并根据JAVA ARRAY的值来填充它 ..如下所示:
+```java
+final Long[] ids = new Long[] {1L, 2L};
+
+SqlTypeValue value = new AbstractSqlTypeValue() {
+    protected Object createTypeValue(Connection conn, int sqlType, String typeName) throws SQLException {
+        ArrayDescriptor arrayDescriptor = new ArrayDescriptor(typeName, conn);
+        ARRAY idArray = new ARRAY(arrayDescriptor, conn, ids);
+        return idArray;
+    }
+};
+```
+
+### 3.9 内嵌数据库支持
+org.springframework.jdbc.datasource.embedded 包提供了内嵌java 数据库引擎的支持,支持HSQL,H2 并且Derby是原生支持的 ..
+你能够使用可扩展的api去增加新的内嵌数据库类型 以及DataSource 实现 ..
+
+### 3.9.1 为什么使用内嵌数据库 ..
+一个内嵌的数据库能够在项目开发阶段使用 - 因为它轻量 .. 好处包括容易配置，快速启动时间,测试能力以及 在开发环境快速的演变 SQL ..
+
+### 通过spring xml 进行Embedded 数据库创建
+如果你想要暴露一个内嵌的数据库实例作为bean 到 spring applicationContext .. 你能够使用spring-jdbc 命名空间的 embedded-datasource 标签 ..
+```java
+<jdbc:embedded-database id="dataSource" generate-name="true">
+    <jdbc:script location="classpath:schema.sql"/>
+    <jdbc:script location="classpath:test-data.sql"/>
+</jdbc:embedded-database>
+```
+这前面的配置创建一个内嵌的数据库HSQL数据库 - 能根据在类路径根上的schema.sql 以及 test-data.sql进行SQL填充 ..
+除此之外,作为最佳实践,这个内嵌的数据库是会分配一个独一无二生成的名称 .. 内嵌的数据库是可以在Spring容器中作为 javax.sql.DataSource
+的bean 可用 - 能够按需的注入到数据访问对象 ...
+
+### 3.9.3 编程式创建一个内嵌的数据库 ..
+EmbeddedDatabaseBuilder 类提供了一个fluent API进行 内嵌的数据库构建 - 编程式构建 ..
+你能够使用它 - 当你需要在单机环境中或者单机集成测试中创建一个内嵌数据库,例如:
+```java
+EmbeddedDatabase db = new EmbeddedDatabaseBuilder()
+        .generateUniqueName(true)
+        .setType(H2)
+        .setScriptEncoding("UTF-8")
+        .ignoreFailedDrops(true)
+        .addScript("schema.sql")
+        .addScripts("user_data.sql", "country_data.sql")
+        .build();
+
+// perform actions against the db (EmbeddedDatabase extends javax.sql.DataSource)
+
+db.shutdown()
+```
+查看 EmbeddedDatabaseBuilder  进行所有支持的选项的经一步了解 ..
+你也能够使用EmbeddedDatabaseBuilder 去创建内嵌数据库 - 通过使用java配置,如下所示:
+```java
+@Configuration
+public class DataSourceConfig {
+
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+                .generateUniqueName(true)
+                .setType(H2)
+                .setScriptEncoding("UTF-8")
+                .ignoreFailedDrops(true)
+                .addScript("schema.sql")
+                .addScripts("user_data.sql", "country_data.sql")
+                .build();
+    }
+}
+```
+
+### 3.9.4 选择内嵌数据库类型
+#### 使用HSQL
+spring 支持HSQL 1.8.0 以上 .. HSQL 默认是内嵌数据库,如果没有类型显式指定 .. 为了显式的HSQL指定,设置embedded-database的标签
+的type属性设置为HSQL...
+如果你使用构建器AP,使用EmbeddedDatabaseType.HSQL 调用setType(EmbeddedDatabaseType) ..
+
+#### H2
+spring 支持 h2数据库,为了启用h2,设置embedded-database的标签的type属性为 h2 ... 通过上述方法进行执行 ..
+#### 使用Derby
+spring 支持Apache Derby10.5 及以上 .. 为了启用Derby,设置embedded-database 标签的type属性 = DERBY ..
+如果你使用构建器api,通过使用EmbeddedDatabaseType.DERBY 调用setType(EmbeddedDatabaseType)方法
+
+### 3.9.5 使用Embedded Database 测试Data Access Logic
+内嵌数据库提供了轻量级的方式去测试数据库访问代码 ..下面的示例是一个数据库访问集成测试模版 - 通过使用内嵌数据库 ..
+例如一次性工作使用这样的一个模版能够有用 - 当内嵌的数据库不需要跨测试类去重用 ..然而,如果你希望创建一个内嵌数据库(在测试套件中共享),
+考虑使用TCF框架并配置内嵌数据库作为spring 应用上下文中的一个bean,如下所示展示测试模版:
+```java
+public class DataAccessIntegrationTestTemplate {
+
+    private EmbeddedDatabase db;
+
+    @BeforeEach
+    public void setUp() {
+        // creates an HSQL in-memory database populated from default scripts
+        // classpath:schema.sql and classpath:data.sql
+        db = new EmbeddedDatabaseBuilder()
+                .generateUniqueName(true)
+                .addDefaultScripts()
+                .build();
+    }
+
+    @Test
+    public void testDataAccess() {
+        JdbcTemplate template = new JdbcTemplate(db);
+        template.query( /* ... */ );
+    }
+
+    @AfterEach
+    public void tearDown() {
+        db.shutdown();
+    }
+
+}
+```
+### 3.9.6 内嵌数据库的独一无二的名称生成 ..
+开发团队通常使用内嵌数据库出错 - 如果它们的测试套件意外的尝试重新创建相同数据库的额外实例 ..
+如果一个xml配置文件或者@Configuration类负责去创建内嵌数据库,创建数据库名称非常简单 ...
+相关的配置能够跨多个测试场景重用(那就是,在相同jvm进程內) .. - 例如,针对内嵌数据库的集成测试,
+其 ApplicationContext 配置仅在那些 bean 定义处于活动状态方面的配置文件有所不同。
+
+这些错误的根原因是事实上spring的EmbeddedDatabaseFactory(被<jdbc:embedded-database>  xml 命名空间的元素 以及进行java配置的EmbeddedDatabaseBuilder同时内部使用)
+设置内嵌数据库的名称为testdb(如果没有指定),对于<jdbc:embedded-database>的情况,内嵌数据库通常会分配一个名称等价于bean id(通常,例如类似于名称database).
+那就是,后续的尝试去创建一个内嵌数据库并不会创建一个新的数据库 ..
+相反,相同的jdbc 连接url 将被重用,并且尝试去创建一个新的内嵌数据库实际上指的是一个从相同配置中创建的内嵌数据库 ..
+
+为了解决这个常见问题，spring 4.2开始提供了对内嵌数据库的唯一性名称生成，为了启用生成名称的使用,使用以下选项中的其中之一:
+- EmbeddedDatabaseFactory.setGenerateUniqueDatabaseName()
+- EmbeddedDatabaseBuilder.generateUniqueName()
+- <jdbc:embedded-database generate-name="true" >
+
+### 3.9.7 扩展内嵌的数据库支持
+通过以下的方式扩展spring jdbc内嵌数据库的支持:
+- 实现 EmbeddedDatabaseConfigurer 去支持新的内嵌数据库类型
+- 实现DataSourceFactory去支持一个新的DataSource 实现,例如使用连接池管理内嵌数据库连接 ..
+  我们鼓励您在 GitHub Issues 上为 Spring 社区贡献扩展。
+### 3.10 初始化数据库
+org.springframework.jdbc.datasource.init 包提供初始化一个存在数据库的初始化 ..
+内嵌的数据库支持提供一个选项进行一个应用的数据库的创建以及初始化 ...
+你有时需要初始化一个实例 - 它在某些服务器上进行运行 ..
+
+###3.10.1 通过xml进行初始化数据库
+如下所示:
+```xml
+<jdbc:initialize-database data-source="dataSource">
+    <jdbc:script location="classpath:com/foo/sql/db-schema.sql"/>
+    <jdbc:script location="classpath:com/foo/sql/db-test-data.sql"/>
+</jdbc:initialize-database>
+```
+这钱吗的示例运行了针对数据库的两个特定脚本 ... 第一个创建schema,第二个使用测试数据集填充表 ..
+脚本位置也可以是带有通配符的模式，采用通常用于 Spring 资源的 Ant 样式(例如: classpath*:/com/foo/**/sql/*-data.sql)..
+如果你使用模式匹配,这个脚本根据它们url或者文件名的词汇顺序进行运行 ..
+数据库初始化器的默认行为对于运行提供的脚本来说是未定义的 .. 这也许不总是你想要的 .. 例如,如果你想要针对已经包含了这些测试数据的数据库运行这些脚本 ..
+根据以下常见模式（如前面的早期所示) - 首先创建表并插入这些数据的常见模式 .. (如果表已经存在,则第一步失败 ..)
+然而,为了在创建以及存在数据的删除之上进行更多细腻的控制,那么xml命名空间提供了额外少量的选项 .. 
+首先有一个标志可以切换初始化的关和开 ..
+你能够根据相关的环境进行设置(例如从系统属性
+或者环境变量bean中获取一个boolean 值),以下示例从系统属性中获取一个值:
+```xml
+<jdbc:initialize-database data-source="dataSource"
+    enabled="#{systemProperties.INITIALIZE_DATABASE}"> (1)
+    <jdbc:script location="..."/>
+</jdbc:initialize-database>
+```
+控制现有数据发生的情况的第二个选择是更加容忍故障。 为此,你能够控制初始化的能力去忽略某些在sql中的错误(当它运行脚本中的sql时),如下所示:
+```xml
+<jdbc:initialize-database data-source="dataSource" ignore-failures="DROPS">
+    <jdbc:script location="..."/>
+</jdbc:initialize-database>
+```
+在前面的示例中,我们希望如此,有些时候,脚本运行在空数据库中,并且这里在脚本中有一些drop语句 .. 因此会失败 ..
+因此失败的sql (drop 语句将会被忽略),但是其他失败将导致异常 .. 这是有用的 - 如果你的sql方言不支持 drop ...if exists(或者 类似)
+但是你想要无条件的移除所有的测试数据(在重新创建表的时候),在这种情况下,第一个脚本通常是drop 语句的集合,后面紧跟create 语句的集合 ..
+这个ignore-failures 选项能够设置 none(默认), drops(忽略失败的drops),或者all(忽略所有的失败) ..
+每一个语句应该通过; 分割,或者;没有出现在脚本中,那么你应该开一个新行 ..
+你可以全局性地控制，也可以逐个脚本地控制，如下面的例子所示。
+```xml
+<jdbc:initialize-database data-source="dataSource" separator="@@"> (1)
+    <jdbc:script location="classpath:com/myapp/sql/db-schema.sql" separator=";"/> (2)
+    <jdbc:script location="classpath:com/myapp/sql/db-test-data-1.sql"/>
+    <jdbc:script location="classpath:com/myapp/sql/db-test-data-2.sql"/>
+</jdbc:initialize-database>
+```
+设置脚本的分割符为 @@,设置db-schema.sql的分割符为 ;
+在这个示例中,第二个test-data脚本使用@@ 作为语句分割符 并且仅仅只有 db-schema.sql使用 ; 这个配置指定了默认的分割符号是
+@@ 并且覆盖了db-schema脚本的分割符 ...
+如果你需要相比于从xml命名空间中的更多配置,那么你可以使用DataSourceInitializer 进行直接使用 并定义为应用中的脚本 ..
+
+#### 初始化依赖于数据库的组件
+应用的大多数类(那些不会使用数据库 直到spring 上下文start之后) 能够使用数据库初始化器 而不会有更多的复杂性 ..如果你的应用没有这些之一,
+你可能需要读取这部分的其他部分 ..
+数据库初始化器依赖于数据库实例 并且在它的初始化回调中运行提供的脚本 ..(类似于xml bean 定义中的 init-method,或者@PostConstruct 或者
+afterPropertiesSet方法), 如果其他bean依赖于相同的数据源并且在初始化回调中使用数据源,那么可能是一个问题，因为数据可能还没有初始化 ...
+一个常见例子是早期初始化的缓存 并且它在应用启动的时候从数据库加载数据 ..
+为了解决这个问题,你有两个选择,你可以改变缓存初始化策略到更后面的一个阶段或者确保数据库初始化器首先对初始化 ..
+改变你的缓存初始化策略可能非常的容易,如果你的应用在你的控制之内,否则,你实现这些可能包括的一些建议如下:
+- 确保在首次使用懒初始化,这能优化应用启动时间 ..
+- 让你的缓存或者单独的组件初始化实现了Lifecycle 或者SmartLifecycle的缓存 .. 当应用上下文start时,你能够自动的启动一个SmartLifecycle - 通过
+设置它的autoStartup标志, 并且你能够手动的启动一个Lifecycle - 通过在一个內部的上下文(这种情况是自定义上下文的生命周期)调用ConfigurableApplicationContext.start() ... 启动
+Lifecycle ...
+- 使用spring 应用事件或者类似自定义观察者的机制去触发缓存初始化 .. ContextRefreshedEvent 总是由上下文发布 - 当它可用的时候(在所有bean已经初始化之后)..
+因此它经常是一个有用的hook(这就是默认SmartLifecycle如何工作 ..)
+
+确保数据库的初始化器 - 首先初始化是非常容易的 ... 如何实现包括了一些建议如下:
+- 依赖 Spring BeanFactory 的默认行为，即 bean 按注册顺序初始化。
+您可以通过在 XML 配置中采用一组 <import/> 元素的常见做法来轻松安排它，
+这些元素对您的应用程序模块进行排序，并确保首先列出数据库和数据库初始化。
+- 分割数据源 以及业务组件使用它并控制它们的启动顺序 - 通过将它们放入独立的应用上下文实例（例如,父上下文包含了DataSource),
+并且子上下文包含了业务组件, 这个结构通常在Spring web 应用 但是也可以用的更加广泛 ...
+
+
+
+
