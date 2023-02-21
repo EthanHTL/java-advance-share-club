@@ -15,6 +15,7 @@
     <modules>
         <module>spring-test-project-test</module>
         <module>spring-framework-data-access-project-test</module>
+        <module>spring-framework-tests</module>
     </modules>
 
     <properties>
