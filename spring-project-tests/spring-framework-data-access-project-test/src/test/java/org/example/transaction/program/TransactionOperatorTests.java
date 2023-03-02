@@ -79,7 +79,7 @@ public class TransactionOperatorTests {
                             .option(ConnectionFactoryOptions.PROTOCOL,"mem")
                             .option(ConnectionFactoryOptions.DATABASE,"testdb")
                             // ?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-                            .option(H2ConnectionFactoryProvider.URL,"r2dbc:h2:mem:///testdb?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
+                            .option(H2ConnectionFactoryProvider.URL,"r2dbc:h2:mem:///testdb")
                             .build());
         }
 
