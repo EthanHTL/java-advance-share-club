@@ -403,6 +403,7 @@ class HibernateTitleRepositoryTests {
 >    public void setDataSource(@Qualifier("myDataSource") DataSource dataSource) {
 >        super.setDataSource(dataSource);
 >    }
+> 
 > ```
 > 对于xml中的 <bean>定义 - 有对应的<qualifier>声明进行限定符匹配 ..
 
@@ -418,3 +419,4 @@ Required / Supports 之外的传播类型 ...
 > 特别是，Spring的测试支持将绑定事务状态到当前线程(通过java.lang.ThreadLocale变量) -在当前测试方法执行之前 ..
 > 如果一个测试框架在新的线程中执行当前的测试方法来执行抢占式超时,那么在当前测试方法中执行的任何动作将不会在测试管理的事务中执行 ..
 > 因此这种情况下任何动作的结果将不会导致使用测试管理的事务进行回滚 .. 并且动作将会提交给持久化存储,例如 - 关系型数据库 .. 即使测试管理的事务正确的被spring回滚 。。
+
