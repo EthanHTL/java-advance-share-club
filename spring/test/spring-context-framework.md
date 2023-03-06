@@ -2,10 +2,10 @@
 spring 团队提倡测试驱动开发(TDD), spring 团队将控制反转使用在单元测试或者集成测试上让测试更加容易(通过预设某些setter 方法 以及在类上使用合适的构造器使得它们更容易在测试中
 相互关联 而无需配置服务定位器注册比奥以及类似的结构 ...
 
-# spring 测试介绍
+# 1. spring 测试介绍
 测试是企业级软件开发的不可分割的一部分,通过ioc原理增加的数据到单元测试以及spring框架对集成测试的支持好处 ..
 
-# 单元测试
+# 2. 单元测试
 构成应用程序的pojo能够通过JUnit或者TestNG测试,只需要通过new 操作符实例化,而无需spring 或者任何其他的容器.. 通过使用mock 对象(通过结合其他有价值的测试技术)去进行隔离测试 ..
 如果遵循spring的架构推荐,那么将导致你的代码组件化以及更加清晰的层次 促进单元测试更加容易 ..
 举个例子,你能够通过填充或者吗模拟dao 或者仓库结构来测试服务层对象,无需在单元测试期间访问持久化数据 。。。
@@ -82,13 +82,13 @@ org.springframework.test.web 包包含了ModelAndViewAssert, 能够与JUnit,Test
    * Testing Client Applications
    * Annotations
 
-##3.1 集成测试的目标是
+## 3.1 集成测试的目标是
 1. 管理测试之间的Spring Ioc容器缓存 ..
 2. 提供test装置实例的依赖注入
 3. 提供对集成测试合适的事务管理
 4. 提供了Spring特定的基类(帮助开发者编写集成测试) ..
 
-###3.1.1 上下文管理以及缓存
+### 3.1.1 上下文管理以及缓存
 spring 测试上下文框架提供了一致的spring应用上下文加载 以及 webApplicationContext(且包含其他上下文的缓存) ...
 上下文缓存很重要. \
 主要是启动时间是一个大的问题,不是因为Spring本身的消耗,是因为由spring容器花时间实例化的对象 ..
@@ -103,7 +103,7 @@ spring 测试上下文框架提供了一致的spring应用上下文加载 以及
 ### 3.1.2 测试装置的依赖注入
 也就是spring 框架提供给我们的依赖注入
 
-### 3.1.3 事务管理
+###  3.1.3 事务管理
 默认回滚,但是你可以提供注解改变事务提交策略 ..(@Commit) ...
 事务管理,注意: 仅仅支持 PlatformTransactionManager,也就是非响应式的事务管理器 ..
 如果使用React类型的,没有任何效果 ...
@@ -128,7 +128,7 @@ spring TestContext 框架提供了各种抽象支持类能够简化集成测试�
 
 AbstractTransactionalJUnit4SpringContextTests 以及 AbstractTransactionalTestNGSpringContextTests 提供了各种代理到
 JdbcTestUtils方法的方法 ..
-###4.2  内嵌数据库
+### 4.2  内嵌数据库
 spring-jdbc模块提供了配置和启动一个内嵌的数据库 .. 这能够在集成测试中进行数据库交互 ...
 查看[内嵌数据库支持](../core/new/data.access/dao-support.md#394-)  以及与内嵌数据进行测试数据访问逻辑  详情了解 ..
 
@@ -143,7 +143,7 @@ POJO测试类不需要扩展特定的类体系,例如 abstract 支持类 .. \
 根据需要了解相关内容,例如 如果你不对测试框架感兴趣,或者不扩展你自己的监听器 或者自定义loader,我们可以直接了解
 如何定义配置并启动集成测试(例如上下文管理，依赖注入，事务管理),支持的类 以及注解支持部分 ..
 
-### 关键抽象
+### 5.1 关键抽象
 框架核心由TestContextManager 类和 TestContext ,TestExecutionListener 以及 SmartContextLoader 接口组成 ..\
 测试上下文管理器将会为每一个测试类创建(例如,所有JUnit5 的单个测试类的所有测试方法),测试上下文管理器,最终会管理当前测试的\
 的上下文(TestContext) ,TestContextManager 同样会更新TestContext的状态（根据测试进度并代理到
@@ -153,10 +153,10 @@ TestExecutionListener 实现)这能够检测实际的测试执行 - 通过(依�
 
 ![img_1.png](img_1.png)
 
-### 测试上下文
+### 5.1.1 测试上下文
 测试上下文封装了当前正在运行测试的上下文(不需要关心使用的实际测试框架)并且提供上下文管理 以及缓存支持(
 为它负责的测试实例),这个测试TestContext 同样代理到 SmartContextLoader 去加载一个应用上下文(如果请求) ..
-### 测试上下文管理器
+### 5.1.2 测试上下文管理器
 这个管理器是一个进入Spring TCF的入口并且它负责管理单个TestContext并且 会触发事件到每一个注册的TestExecutionListener\
 在已经定义好的测试执行点 ..
 - 在任何特殊测试框架的"before class" / "before all"方法之前
@@ -167,10 +167,10 @@ TestExecutionListener 实现)这能够检测实际的测试执行 - 通过(依�
 - 在特殊的测试框架的"after" / "after each"的方法之后
 - 在任何特殊的测试框架的"after class" / "after all"方法之后
 
-### TestExecutionListener
+### 5.1.3 TestExecutionListener
 这个监听器定义了一些api 用来交互由 TestContextManager发布的的测试执行事件(只要监听器注册到
 TestContextManager上)
-### 上下文加载器
+### 5.1.4 上下文加载器
 ContextLoader 是一个策略接口用来加载由Spring 测试上下文框架所管理的 一个集成测试的应用上下文 .. \
 你应该实现SmartContextLoader 而不是此接口去提供组件类，激活bean 定义profiles,测试属性资源，\
 上下文体系以及WebApplicationContext支持 .. \
@@ -200,7 +200,7 @@ Spring提供了以下的实现:
 
 ## 引导TCF
 Spring TestContext Framework 内部的默认配置足以满足所有常见用例。然而,有些时候开发团队或者第三方框架\
-可能会改变默认的ContextLoader,实现一个自定义的TestContext或者ContextCache,增加ContextCustomizerFactory的\
+可能会改变默认的ContextLoader,实现一个自定义的TestContext或者ContextCache,增加ContextCustomizerFactory\
 以及TestExecutionListener实现的默认集合 .. \
 对于底层TCF如何操作,Spring提供了引导策略 ..,TestContextBootstrapper 定义了引导TestContext框架的SPI . \
 一个TestContextBootstrapper 将会由TestContextManager 使用去加载当前测试的TestExecutionListener 实现 \
@@ -210,7 +210,7 @@ WebTestContextBootstrapper将会被使用,依赖于@WebAppConfiguration的出现
 因此TestContextBootstrapper SPI 可能会在未来发生改变(适应新的需求),我们强烈建议实现者不要直接实现这个接口,相反扩展\
 AbstractTestContextBootstrapper 或者它具体的子类之一进行替代 ..
 
-## TestExecutionListener 配置
+## 5.3 TestExecutionListener 配置
 Spring 提供了以下的TestExecutionListener 实现(默认注册的),顺序如下：
 - ServletTestExecutionListener 为WebApplicationContext 配置Servlet api .. mock ..
 - DirtiesContextBeforeModesTestExecutionListener 
@@ -227,10 +227,31 @@ Spring 提供了以下的TestExecutionListener 实现(默认注册的),顺序如
    通过@Sql注解运行配置的SQL 脚本 ..
 - EventPublishingTestExecutionListener
    派发测试执行事件到测试的应用上下文中(这里是测试执行事件,不同于应用事件)
-### 默认的测试执行监听器实现的 自动发现
+### 5.3.1 注册TestExecutionListener 实现
+你能够注册TestExecutionListener 实现, 通过@TestExecutionListeners 显式的为一个测试类注册 测试执行监听器 !!! 它的子类以及它的内嵌类也能够
+基于相同的方式注册
+> 切换到默认的TestExecutionListener 实现
+> 如果你扩展了一个类 - 它注释了@TestExcutionListeners 并且你希望切换到使用默认的监听器集合 ..
+> 你能够使用以下方式注释你的类
+
+```java
+// Switch to default listeners
+@TestExecutionListeners(
+    listeners = {},
+    inheritListeners = false,
+    mergeMode = MERGE_WITH_DEFAULTS)
+class MyTest extends BaseTest {
+    // class body...
+}
+
+
+```
+也就是进行合并 !!!!
+
+### 5.3.2 默认的测试执行监听器实现的 自动发现
 通过spring spi 实现自动发现,将全局自动配置的 测试执行监听器想要使用到整个测试套件上,那么 \
 相比单个测试上添加默认和自定义的测试执行监听器来说要方便的很多 ... 通过SpringFactoriesLoader\
-实现TestExecutionListener 实现发现,通过在META-INF/spring.factories文件中配置即可 ..
+进行TestExecutionListener 发现,通过在META-INF/spring.factories文件中配置即可 ..
 ### 测试执行监听器的实现顺序
 默认通过order注解或者 Ordered接口 ...
 
@@ -246,17 +267,20 @@ class MyTest {
     // class body...
 }
 ```
-## 应用事件
-从spring framework5.3.3开始,TestContext框架支持记录发布在applicationContext中的应用事件,
+如果order 值更小,那么则排序将放置测试执行监听器到前面 !!!
+## 5.4 应用事件
+从spring framework5.3.3开始,TestContext框架支持记录 - 发布在applicationContext中的应用事件,
 这样就能够根据在测试中断言某些事件 .. 在单个测试中的所有发布的事件能够有效的通过ApplicationEvents \
 Api 获取(你能够像java.util.Stream)那样处理 .. \
-为了在测试中使用ApplicationContext ..,我们应该这样做:
+为了在测试中使用ApplicationEvents ..,我们应该这样做:
 1. 确保你的测试类式通过@RecordApplicationEvents注解或者元注解 ..
 2. 确保ApplicationEventsTestExecutionListener 已经注册,注意到,这个监听器默认已经注册,但是有些情况
    你需要手动注册(例如你没有注册默认的测试监听器 ..)
 3. 通过@Autowired 注解ApplicationEvents 类型的字段 并且在测试中或者生命周期方法使用它(
   例如JUnit5中的@BeforeEach / @AfterEach方法)
-   - 当个使用Junit5的扩展时,你也许可以在测试中或者生命周期方法中声明一个ApplicationEvents类型的参数,又或者进行依赖注入 ..
+   - 当使用针对与Junit5的Spring 扩展时 - SpringExtension,你也许可以在测试中或者生命周期方法中声明一个ApplicationEvents类型的参数,又或者进行依赖注入 ..
+   - 这里本质上就是因为junit5 扩展增强更进一步,相比于进行测试类的字段注入,能够进行各种方法注入 - 核心是通过ParameterDiscover 进行处理 !!!
+   - 对于junit4.13版本以上,是通过规则 / 或者 runner 实现 依赖注入处理..
    
 以下的测试类使用了JUnit5的SpringExtension 并使用AssertJ去断言已经发布事件的类型断言(当执行一个Spring管理的组件的方法时 ..)
 ```java
@@ -282,7 +306,7 @@ class OrderServiceTests {
 ```
 这个示例很简单,能够了解执行的方法中发布了多少个这种类型的应用事件 ..
 
-## 测试执行事件
+## 5.5 测试执行事件
 EventPublishingTestExecutionListener 从spring 5.2开始引入去提供一种额外的方式去替代实现自定义的 \
 TestExecutionListener.. 在测试的ApplicationContext的组件能够监听以下由EventPublishingTestExecutionListener发布的事件 ..
 - BeforeTestClassEvent
@@ -299,14 +323,15 @@ TestExecutionListener.. 在测试的ApplicationContext的组件能够监听以�
 将不是一个ApplicationContext中的bean ...
 > 这个EventPublishingTestExecutionListener默认已经被注册,但是仅仅在应用上下文已经加载之后才会发布事件 .. \
 > 之前加载的应用上下文将没有任何用处 ..
-> 因此,BeforeTestClassEvent 将不会发布直到ApplicationContext 已经被其他的TestExecutionListener 加载 ..
+> 因此,BeforeTestClassEvent 将不会发布-直到ApplicationContext 已经被其他的TestExecutionListener 加载 ..
 > 举个例子,默认的 TestExecutionListener 实现集合是注册的,一个BeforeTestClassEvent将不会发布(如果第一个测试类使用了特殊的测试ApplicationContext) \
-> 但是一个BeforeTestClassEvent 将会在后续的相同测试套件中的测试类中发布(如果使用相同的测试应用上下文，因为上下文已经加载 - 当后续的测试类运行的时候) \
-> 只要上下文不会从ContextCache中移除(通过@DirtiesContext 或者 最大尺寸 抛弃策略) ..
-> 如果你想要确保BeforeTestClassEvent总是针对每一个测试类进行发布,你也许注册一个 TestExecutionListener 去在beforeTestClass回调中加载ApplicationContext .. \
-> 并且此监听器必须注册在 EventPublishingTestExecutionListener ..
+> 但是一个BeforeTestClassEvent 将会在后续的相同测试套件中的测试类中发布(如果使用相同的测试应用上下文，因为上下文已经加载 - 当后续的测试类运行的时候,而第一个测试类它由于加载应用上下文则无法享受到这个好处..) \
+> -- 并且只要上下文没有从ContextCache中移除(通过@DirtiesContext 或者 最大尺寸 抛弃策略移除) ..
+> 如果你想要确保BeforeTestClassEvent总是针对每一个测试类都需要进行发布,你也许可以注册一个 TestExecutionListener 去在beforeTestClass回调中加载ApplicationContext .. \
+> 并且此监听器必须注册在 EventPublishingTestExecutionListener 之前..
 > 并且类似的,@DirtiesContext 被用来从上下文缓存中移除ApplicationContext(当给定测试类中的最近的测试方法执行完毕) \
-> AfterTestClassEvent 那么这个测试类将不可能接收到这个事件(因为只有被加载的上下文才能够接收到此事件) ..
+> AfterTestClassEvent 那么将不会为这个测试类派发此事件(因为只有被加载的上下文才能够进行事件派发) ..
+> 此时应用上下文已经被移除 !!!
 
 为了监听测试执行事件, Spring bean 可以选择实现 ApplicationListener接口,除此之外,监听器方法能够通过@EventListener注册并且 \
 配置去监听一个或者多个事件类型... 由于这种方式很方便,以下注解增加了@EventListener注解作为元注解 .. 简化测试执行事件监听器的注解 ..
@@ -325,12 +350,614 @@ TestExecutionListener.. 在测试的ApplicationContext的组件能够监听以�
 @AfterTestClass
 
 ## 异常处理
-默认情况下一个测试执行事件监听器抛出异常会导致传播到底层的测试框架,如果是同步的,没有任何问题,但是
+默认情况,当一个测试执行事件监听器消费事件的时候抛出异常会导致传播到底层的测试框架,如果是同步的,没有任何问题,但是
 如果是一个异步的执行事件监听器抛出了异常,那么这个异常将不会传递给底层的测试框架 ... 
-本质上是因为异步异常处理,它
+本质上是因为异步异常处理,异步栈可能执行不是当前线程 !!!
 
-## 上下文管理
+### 5.5.2 异步监听器
+很简单，只需要通过@Async 注解支持就可以 !!!
+本质上,异步注解就是将方法操作包装 - 通过异步栈执行,但是目标对象的声明的对应方法最终只会返回传递值的future - 如果有返回值 !!!
+但是由于是异步,也就意味着 返回值必须是异步包装类型 而不是普通类型,详情查看 @Async 方法注释 !!!
 
+## 5.6 上下文管理
+TestContext 负责提供上下文管理 以及对测试实例的缓存支持 !!!
+测试示例默认没有自动具有对配置的ApplicationContext的访问 !!!如果测试类实现了ApplicationContextAware 接口,那么将会自动注入应用上下文到测试实例中 ..
+注意到spring提供了各种方便与SpringContext结合使用的类 ... 但是这些是特定于spring的类，也就是会和spring 耦合，如果你不喜欢编写基于spring的测试类 或者为你的测试类
+添加Test Context Framework 支持，那么就是使用前者...  并且这些特定的类都实现了ApplicationContextAware接口，提供了对ApplicationContext的自动访问 !!
+> 或者基于依赖注入 注入应用上下文
+> 可以作为实现ApplicationContextAware的替代 ... 如下
+> ```java
+> @SpringJUnitConfig
+> class MyTest {
+>
+>    @Autowired 
+>    ApplicationContext applicationContext;
+>
+>    // class body...
+> }
+> ```
+
+同时这个能力是通过 DependencyInjectionTestExecutionListener提供的 ... 这些是默认配置的 ...
+> 测试类使用testContext 框架能力不需要扩展任何类或者实现任何接口去配置它们的应用上下文 ...
+> 通过设置@ContextConfiguration即可 ...如果没有显式指定应用上下文的资源位置或者组件类. 那么
+> 配置的ContextLoader 将决定如何从默认位置加载上下文 或者从默认配置类加载上下文...  除了上下文
+> 资源位置以及组件类，一个应用上下文可以通过应用上下文初始化器配置 !!!
+> 除此之外可以通过实现并配置自定义的SmartContextLoader 进行高级使用 !!!
+
+[spring application context configuration](https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html#testcontext-ctx-management-xml)
+这里存在各种配置方式 ...
+### 5.6.6 上下文配置继承
+@ContextConfiguration supports boolean inheritLocations and inheritInitializers attributes that denote whether resource locations or component classes and context initializers declared by superclasses should be inherited.
+默认是true,也就是默认继承 ..
+```java
+@ExtendWith(SpringExtension.class)
+// ApplicationContext will be loaded from "/base-config.xml"
+// in the root of the classpath
+@ContextConfiguration("/base-config.xml") 
+class BaseTest {
+    // class body...
+}
+
+// ApplicationContext will be loaded from "/base-config.xml" and
+// "/extended-config.xml" in the root of the classpath
+@ContextConfiguration("/extended-config.xml") 
+class ExtendedTest extends BaseTest {
+    // class body...
+}
+```
+如果子类作为其他的类的父类同样可以进行指定的配置继承选项配置 !!!
+通用,也支持增加初始化器 配置应用上下文,初始化器可以使用@Order注解进行 执行顺序排序 ..
+### 5.6.7 profiles active
+You can use @ActiveProfiles with any implementation of the SmartContextLoader SPI, but @ActiveProfiles is not supported with implementations of the older ContextLoader SPI.
+```java
+<!-- app-config.xml -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xsi:schemaLocation="...">
+
+    <bean id="transferService"
+            class="com.bank.service.internal.DefaultTransferService">
+        <constructor-arg ref="accountRepository"/>
+        <constructor-arg ref="feePolicy"/>
+    </bean>
+
+    <bean id="accountRepository"
+            class="com.bank.repository.internal.JdbcAccountRepository">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+    <bean id="feePolicy"
+        class="com.bank.service.internal.ZeroFeePolicy"/>
+
+    <beans profile="dev">
+        <jdbc:embedded-database id="dataSource">
+            <jdbc:script
+                location="classpath:com/bank/config/sql/schema.sql"/>
+            <jdbc:script
+                location="classpath:com/bank/config/sql/test-data.sql"/>
+        </jdbc:embedded-database>
+    </beans>
+
+    <beans profile="production">
+        <jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/jdbc/datasource"/>
+    </beans>
+
+    <beans profile="default">
+        <jdbc:embedded-database id="dataSource">
+            <jdbc:script
+                location="classpath:com/bank/config/sql/schema.sql"/>
+        </jdbc:embedded-database>
+    </beans>
+
+</beans>
+
+```
+从上面其中某一个方面进行激活 ..
+```java
+@ExtendWith(SpringExtension.class)
+// ApplicationContext will be loaded from "classpath:/app-config.xml"
+@ContextConfiguration("/app-config.xml")
+@ActiveProfiles("dev")
+class TransferServiceTest {
+
+    @Autowired
+    TransferService transferService;
+
+    @Test
+    void testTransferService() {
+        // test the transferService
+    }
+}
+
+
+```
+并且此注解也支持配置继承 ..可以通过inheritProfiles属性进行禁用 ...
+It is sometimes useful to assign beans to a default profile. Beans within the default profile are included only when no other profile is specifically activated. You can use this to define “fallback” beans to be used in the application’s default state. For example, you may explicitly provide a data source for dev and production profiles, but define an in-memory data source as a default when neither of these is active.
+
+```java
+@Configuration
+@Profile("dev")
+public class StandaloneDataConfig {
+
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.HSQL)
+            .addScript("classpath:com/bank/config/sql/schema.sql")
+            .addScript("classpath:com/bank/config/sql/test-data.sql")
+            .build();
+    }
+}
+
+
+```
+```java
+@Configuration
+@Profile("production")
+public class JndiDataConfig {
+
+    @Bean(destroyMethod="")
+    public DataSource dataSource() throws Exception {
+        Context ctx = new InitialContext();
+        return (DataSource) ctx.lookup("java:comp/env/jdbc/datasource");
+    }
+}
+
+
+```
+```java
+@Configuration
+@Profile("production")
+public class JndiDataConfig {
+
+    @Bean(destroyMethod="")
+    public DataSource dataSource() throws Exception {
+        Context ctx = new InitialContext();
+        return (DataSource) ctx.lookup("java:comp/env/jdbc/datasource");
+    }
+}
+
+
+```
+```java
+@Configuration
+@Profile("default")
+public class DefaultDataConfig {
+
+    @Bean
+    public DataSource dataSource() {
+        return new EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.HSQL)
+            .addScript("classpath:com/bank/config/sql/schema.sql")
+            .build();
+    }
+}
+
+
+```
+```java
+@Configuration
+public class TransferServiceConfig {
+
+    @Autowired DataSource dataSource;
+
+    @Bean
+    public TransferService transferService() {
+        return new DefaultTransferService(accountRepository(), feePolicy());
+    }
+
+    @Bean
+    public AccountRepository accountRepository() {
+        return new JdbcAccountRepository(dataSource);
+    }
+
+    @Bean
+    public FeePolicy feePolicy() {
+        return new ZeroFeePolicy();
+    }
+}
+
+
+```
+```java
+@SpringJUnitConfig({
+        TransferServiceConfig.class,
+        StandaloneDataConfig.class,
+        JndiDataConfig.class,
+        DefaultDataConfig.class})
+@ActiveProfiles("dev")
+class TransferServiceTest {
+
+    @Autowired
+    TransferService transferService;
+
+    @Test
+    void testTransferService() {
+        // test the transferService
+    }
+}
+
+
+```
+Furthermore, it is sometimes necessary to resolve active profiles for tests programmatically instead of declaratively .for example, based on:
+
+The current operating system.
+
+Whether tests are being run on a continuous integration build server.
+
+The presence of certain environment variables.
+
+The presence of custom class-level annotations.
+
+Other concerns.
+
+To resolve active bean definition profiles programmatically, you can implement a custom ActiveProfilesResolver and register it by using the resolver attribute of @ActiveProfiles. For further information, see the corresponding javadoc. The following example demonstrates how to implement and register a custom OperatingSystemActiveProfilesResolver:
+```java
+// "dev" profile overridden programmatically via a custom resolver
+@ActiveProfiles(
+        resolver = OperatingSystemActiveProfilesResolver.class,
+        inheritProfiles = false)
+class TransferServiceTest extends AbstractIntegrationTest {
+    // test body
+}
+
+```
+```java
+public class OperatingSystemActiveProfilesResolver implements ActiveProfilesResolver {
+
+    @Override
+    public String[] resolve(Class<?> testClass) {
+        String profile = ...;
+        // determine the value of profile based on the operating system
+        return new String[] {profile};
+    }
+}
+```
+### 5.6.8 使用测试属性资源配置上下文
+同spring默认的PropertySource注解类似,只是使用@TestPropertySource ...
+> @TestPropertySource 能够与任何SmartContextLoader SPI一起使用,但是此注解不支持 更旧的ContextLoader SPI ..
+> SmartContextLoader 的实现能够细腻的访问测试资源值 - 通过getPropertySourceLocations() 以及
+> getPropertySourceProperties() - 来自MergedContextConfiguration类的方法 ..
+#### 声明Test Property Sources
+你能够通过TestPropertySource注解的locations / value属性配置测试属性文件!!!
+同时支持传统的 以及基于xml的属性文件格式：
+```text
+"classpath:/com/example/test.properties" or "file:///path/to/file.xml".
+```
+支持各种资源格式,例如http: / file: 开头或者绝对路径开头的资源路径,但是资源通配符不允许,例如
+```text
+*/.properties
+```
+每一个路径必须评估为一个`.properties` 或者 `.xml` 资源 ..
+同样内联属性，作为TestPropertySource的properties属性 配置 - key-value语法支持三种:
+```text
+key=value
+
+key:value
+
+key value
+```
+以下的示例设置两个内联属性..
+```java
+@ContextConfiguration
+@TestPropertySource(properties = {"timezone = GMT", "port: 4242"}) 
+class MyIntegrationTests {
+    // class body...
+}
+```
+> spring 5.2开始,此注解是一个可重复注解 ... 意味着后者会覆盖前者 ..
+> 当然你可以使用它作为元注解 或者多个组合注解 !!!
+> 越靠近测试类的注解优先级更高,例如直接注解呈现相比于TestPropertySource元注解具有更高的优先级 ..
+> 也就是说,优先级高的将会覆盖优先级低的 ...
+
+#### 默认属性文件检测
+如果此注解声明为一个空注解,也就是没有配置属性值,那么将会根据声明注解的类进行默认的属性文件检测,例如
+`com.example.MyTest` 类,它的相关默认的属性文件检测为`classpath:com/example/MyTest.properties`.
+如果默认的无法检测,则抛出一个IllegalStateException ...
+
+#### 优先级
+在操作系统 / java system properties / 或者通过@PropertySource或者编程式增加的属性 - 测试属性具有更高的优先级 ..
+也就是测试属性能够可选的覆盖前面提到的属性源的属性 ... 因此内联的属性具有相比于从资源位置加载的属性具有更高的优先级 ..
+然而,通过@DynamicPropertySource 相比于通过@TestPropertySource加载的属性具有更高的优先级 ..
+在下一个示例中， 通过/test.properties 定义的任何属性以及 timezone / port属性将会覆盖任何已有属性(包括从
+java system properties / 系统环境变量加载的) ..
+如果"/test.properties"定义了timezone / port 将会覆盖在@TestPropertySource的properties属性上声明的内联属性 ..
+```java
+@ContextConfiguration
+@TestPropertySource(
+    locations = "/test.properties",
+    properties = {"timezone = GMT", "port: 4242"}
+)
+class MyIntegrationTests {
+    // class body...
+}
+```
+属性同样支持继承,inheritLocations and inheritProperties 属性可以同时设定来决定是否继承父类加载的属性 ..
+默认是继承,那么测试类增加的内联属性以及资源路径将追加到父类声明的相应属性中 .. 也就是形成属性遮盖 ..(自然而然) ..
+如果不想继承,则设置为false 即可 .. \
+在下一个示例中,BaseTest加载的应用上下文仅仅使用base.properties文件加载作为测试属性源.. 
+子类甚至跟多 ..
+```java
+@TestPropertySource("base.properties")
+@ContextConfiguration
+class BaseTest {
+    // ...
+}
+
+@TestPropertySource("extended.properties")
+@ContextConfiguration
+class ExtendedTest extends BaseTest {
+    // ...
+}
+
+
+```
+在下一个示例中,BaseTest的应用上下文仅仅加载了一个内联key1属性属性源. ExtendedTest的应用上下文加载了两个内联属性..(key1 /key2属性) ...
+这个示例展示了如何通过内联属性在超类和子类中定义属性 ..
+
+### 5.6.9 使用动态属性源进行上下文配置
+如spring 5.2.5开始,可以通过@DynamicPropertySource注解 支持动态属性 ..这个注解能够使用在集成测试中 - 如果你需要增加具有动态值的属性到
+集成测试加载的应用上下文的Environment的PropertySources中 ..
+> 此注解原来是设计去允许基于[TestContainer](https://www.testcontainers.org/)容器的测试的属性能够更容易暴露到Spring的集成测试 ..
+> 然而,这个特性能够使用在任何外部形式的资源 - 这些生命周期在测试的应用上下文之外进行维护的情况下 ..
+
+对比TestPropertySource 注解应用到类级别上,此注解必须应用到静态方法上(接收单个DynamicPropertyRegistry参数的) - 这将被用来加载name-value 对
+到Environment .. 值是动态的并且通过Supplier提供的 - 当属性解析的时候才会执行 ..
+通常方法引用被用来提供值，如下示例中被TestContainer 项目用来在spring 应用上下文之外管理Redis 容器 ..
+管理的Redis容器的地址和端口对于测试应用上下文中的组件可用 - 通过redis.host / redis.port属性注入 ..
+这些属性能够通过Spring的Environment抽象访问 - 或者直接注入到Spring管理的组件 !! -例如:
+@Value("${redis.host}") and @Value("${redis.port}") ..
+> 如果在基类中使用@DynamicPropertySource 并且如果发现在子类中方法中失败,因为动态属性在子类之间发生改变 ..
+> 也许你需要通过@DirtiesContext注解基类 去确保每一个子类能够获取具有正确动态属性的独立应用上下文 !!!
+
+```java
+@SpringJUnitConfig(/* ... */)
+@Testcontainers
+class ExampleIntegrationTests {
+
+    @Container
+    static GenericContainer redis =
+        new GenericContainer("redis:5.0.3-alpine").withExposedPorts(6379);
+
+    @DynamicPropertySource
+    static void redisProperties(DynamicPropertyRegistry registry) {
+        registry.add("redis.host", redis::getHost);
+        registry.add("redis.port", redis::getFirstMappedPort);
+    }
+
+    // tests ...
+
+}
+```
+
+### 5.6.10 加载一个WebApplicationContext
+通过@WebAppConfiguration 注解可以指示spring让TestContext框架加载一个WebApplicationContext ..
+这个注解指示测试上下文框架加载一个WebApplicationContext  .. 在背后TcF将会创建一个MockServletContext 并且应用到测试的WAC...
+默认情况下基础资源路径设置为 src/main/webapp. 这相对于jvm的根路径进行解析 ..(通常是你项目的路径)..
+如果你熟悉maven项目中的web应用的目录结构 ... 你应该知道src/main/webapp是war的根路径的默认位置 ..可以覆盖 ... 你可以通过为此注解添加
+一个替代的路径(例如@WebAppConfiguration("src/test/webapp")). 如果你希望从类路径上而不是文件系统上引用一个基础资源路径 ..
+你能够使用Spring的`classpath:` 前缀 .. \
+注意到spring测试对web应用上下文的支持等价于普通的应用上下文 ...
+你能够在ContextConfiguration注解上声明xml配置文件,groovy 脚本或者@Configuration类 ..包括这种注解 ..
+@ActiveProfiles / @TestExecutionListeners / @Sql /@Rollback 以及其他 ..
+```java
+@ExtendWith(SpringExtension.class)
+
+// defaults to "file:src/main/webapp"
+@WebAppConfiguration
+
+// detects "WacTests-context.xml" in the same package
+// or static nested @Configuration classes
+@ContextConfiguration
+class WacTests {
+    //...
+}
+
+
+```
+默认此注解将寻找file:src/main/webapp . 类似的,你能够声明@ContextConfiguration 而不指定任何资源locations /
+组件classes 或者上下文初始化器 . spring 会根据约定去检测默认配置的出席 ..例如
+WacTests同包的WacTests-context.xml 或者@Configuration类的静态内嵌类 ...
+```java
+@ExtendWith(SpringExtension.class)
+
+// file system resource
+@WebAppConfiguration("webapp")
+
+// classpath resource
+@ContextConfiguration("/spring/test-servlet-config.xml")
+class WacTests {
+    //...
+}
+```
+这里需要注意的是,@WebAppConfiguration注解的资源路径是基于文件系统的,但是@ContextConfiguration 资源路径是基于类路径的 ...
+所以上面示例中/spring/test-servlet-config.xml指的是相对于类路径的路径 .. \
+但是资源语意是可以通过资源前缀修改的 ..
+
+### 5.6.11 与 web mocks 协同工作
+为了提供给你广泛的web 测试支持,TestContext 框架具有一个ServletTestExecutionListener 默认启用，当针对WebApplicationContext测试的情况下 ..
+TestExecutionListener  - 通过使用Spring web的RequestContextHolder配置默认的线程本地状态 - 在每一个测试方法之前并创建一个MockHttpServletRequest,
+MockHttpServletResponse 以及基于@WebAppconfiguration配置的基础资源路径创建一个ServletWebRequest ..
+此监听器同样会确保MockHttpServletResponse 以及 ServletWebRequest 注入到测试实例 .. 一旦测试完成,它将清理线程本地状态 .. \
+一旦你的测试中加载了一个webApplicationContext,你可能发现你需要和web mocks进行交互 .. 举个例子,为了配置测试装置或者在执行web组件之后执行断言 !!!
+以下的示例展示了那些mock将会自动的注入到测试实例中，注意到WebApplicationContext 以及 MockServletContext 同时跨越整个测试套件缓存.. 但是其他mock是通过
+ServletTestExecutionListener对应测试方法一对一管理 ..
+```java
+@SpringJUnitWebConfig
+class WacTests {
+
+    @Autowired
+    WebApplicationContext wac; // cached
+
+    @Autowired
+    MockServletContext servletContext; // cached
+
+    @Autowired
+    MockHttpSession session;
+
+    @Autowired
+    MockHttpServletRequest request;
+
+    @Autowired
+    MockHttpServletResponse response;
+
+    @Autowired
+    ServletWebRequest webRequest;
+
+    //...
+}
+```
+### 5.6.12 上下文缓存
+TestContext框架加载了应用上下文(或者web相关的应用上下文),那么上下文将会缓存并在之后的测试中进行重用(如果在相同测试套件中声明相同唯一的上下文配置的后续测试)...
+为了理解缓存如何工作,重要的是理解唯一和测试套件意味着什么? \
+一个应用上下文能够通过被用来加载它的配置参数的合并来唯一标识 .. 因此,配置参数的唯一性合并将被用来生成一个key(对于需要被缓存的上下文),
+TestContext框架使用了以下的配置参数去构建上下文缓存key:
+- locations(来自@ContextConfiguration的属性)
+- classes(来自@ContextConfiguration的属性)
+- contextInitializerClasses (from @ContextConfiguration)
+- contextCustomizers (from ContextCustomizerFactory) - 这包括@DynamicPropertySource方法以及来自Spring boot测试支持的各种特性(例如@MockBean / @SpyBean)
+- contextLoader(来自@ContextConfiguration)
+- parent 来自（@ContextHierarchy)
+- activeProfiles(来自@ActiveProfiles)
+- propertySourceLocations (from @TestPropertySource)
+- propertySourceProperties (from @TestPropertySource)
+- resourceBasePath (from @WebAppConfiguration)
+
+上下文共享发生在, 所产生的上下文key是一致的,那么则对于测试类将会共享相同的应用上下文 .. 这意味着加载应用上下文的配置话费仅仅只会增加一次(对于每一个测试套件 / 一组测试),后续的测试执行
+可以更快 ..
+> 测试套件和forked 进程
+> spring tcf 在静态缓存中存储应用上下文,这意味着上下文是从字面上是存在一个静态变量中 .. 换句话说,如果测试运行在独立的进程中静态缓存将会在每一次测试执行之间进行清除 ..
+> 这有效的禁用了缓存机制 ..
+> 为了从缓存机制中收益,所以需要所有测试运行在相同的进程或者测试套件中 ...这能够通过在ide中执行一组测试(将所有测试分为一组)，类似的通过构建框架例如Ant,Maven,Gradle等执行测试时,
+> 确保构建框架不会在测试之间进行fork.. 举个例子,maven surefire plug-in的forkMode模式设置为always或者pertest,
+> 那么tcf将不能够在测试类之间进行上下文缓存并且构建程序明显的运行的更慢 ..
+
+并且上下文缓存的尺寸限制为默认32(最大),无论是否达到,都会有一个lru(最近最少使用抛弃策略)被用来抛弃并关闭陈旧的上下文 .. 你能够配置最大值(通过命令行 或者 构建脚本设置jvm 系统属性) - spring.test.context.cache.maxSize .
+作为替代,你可以通过SpringProperties机制设置相同属性 ..
+因此在给定测试套件中加载了大量的应用上下文可能导致套件运行时间不必要的过长..  通常的好处是知道到底有多少个上下文已经加载并缓存 .. \
+为了查看底层上下文缓存的统计,你可以设置org.springframework.test.context.cache的日志级别为 debug ..
+
+对于测试打断应用上下文并要求重载的测试情况(例如,修改一个bean 定义或者应用对象的状态),你能够使用@DirtiesContext注释你的测试类或者测试方法 ..
+这指示Spring将从缓存中移除上下文并在下一个测试(需要相同上下文的)执行之前进行重建,注意到@DirtiesContext注解是由DirtiesContextBeforeModesTestExecutionListener以及
+DirtiesContextTestExecutionListener提供的，这默认启用 ...
+> 应用上下文生命周期和控制台日志
+> 当使用tcf调试一个测试时,你能够分析控制台输出(对应系统输出和错误输出流 - SYSOUT / SYSERR). 某些构建工具以及ides 能够关联控制台输出到给定测试，然而某些控制台输出不能容易的关联到给定测试 ..
+> 有关由spring框架自己以及注册到应用上下文中的组件触发的控制台日志,需要理解在一个测试套件中由Spring测试框架加载的应用上下文的生命周期 ...
+> 通常一个测试的应用上下文是当测试类的时候已经准备好的时候将会加载,例如通过依赖注入到测试实例的字段上，这意味着在应用上下文的初始化阶段的任何尝试控制台日志输出都通常不能够关联到一个独立的测试方法(
+> 因此此时 测试方法还没有执行 ..,且测试实例正在初始化中 ..) .. 然而,如果上下文在一个测试方法执行之前立即关闭(根据@DirtiesContext语意)，一个上下文的新实例将被加载（在下一个测试方法执行之前) .. 后者的情况下，ide或者构建工具
+> 能够关联控制台日志输出到独立的测试方法 ..
+> 一个测试的应用上下文能够在以下的情况进行关闭:
+> - 根据@DirtiesContext语意关闭 ..
+> - 由于lru 抛弃策略进行自动的被缓存关闭 ..
+> - jvm 关闭回调钩子触发上下文关闭(当测试套件的jvm结束时)
+> 
+> 如果上下文根据@DirtiesContext语意在特定的测试方法之后进行关闭 .. 一个ide / 构建工具也许能够关联控制台输出到单独的测试方法 ...
+> 如果上下文根据@DirtiesContext语意在测试类之后进行关闭,在关闭应用上下文期间的任何控制台日志触发将不能够关联到一个独立的测试方法上 ..
+> 类似的,任何在关闭阶段通过jvm 关闭钩子的任何控制台日志触发将无法关联到独立的测试方法 ..
+> 
+> 当一个Spring 应用是通过jvm 回调钩子关闭,在关闭阶段执行的回调是执行在SpringContextShutdownHook线程上.. 因此如果你希望当通过jvm关闭钩子
+> 时禁用控制台日志尝试(触发),你能够注册一个自定义的过滤器到日志框架中允许你忽略该线程初始化的任何日志 ..
+
+### 5.6.13 上下文体系
+当编写依赖于spring 应用上下文的集成测试时,一般一个测试满足于单个应用上下文... 然而有些时候需要从应用上下文实例的体系上受益,举个例子,如果你开发spring mvc web应用 ..
+你通常会存在一个顶级的webApplicationContext,通常由ContextLoaderListener 加载,并且子web应用上下文由spring的dispatcherServlet加载 ..
+这会导致一个父子体系 - 能够共享组件以及基础设施配置(例如它们声明在父上下文中),能够被子上下文消费, 另一种情况时发生在spring batch 应用中,这经常会有一个相同的父上下文
+提供共享的批处理基础设施的配置并且子上下文配置特定批处理job的配置 .. \
+我们可以轻松的编写使用上下文体系的集成测试,只需要使用@ContextHierarchy 进行上下文配置声明 ..
+要么独立的测试类或者在一个此测试类体系中注释 ..  如果在测试类层次结构中的多个类上声明了上下文层次结构，您还可以合并或覆盖上下文层次结构中特定命名级别的上下文配置。
+当合并在体系中的给定级别的配置时,这个配置资源类型(那就是xml配置文件或者组件类)必须一致,否则,使用不同的资源类型来配置上下文层次结构中的不同级别是完全可以接受的。
+它的含义就是,配置针对给定层级的应用上下文配置一定要一致,否则,上下文体系则失去了意义,例如父容器共享的配置，子容器也配置了一份,可接受,但是失去了上下文体系的意义 ..
+以下是基于JUnit Jupiter的示例,它展示了需要使用上下文体系的常见配置场景的集成测试 ..
+
+#### 使用上下文体系的单个测试类
+例如这里是一个常见的spring mvc web应用,它由两个层级组成，一个顶级的web应用上下文 - 通过TestAppconfig加载,
+另一个是dispatcher servlet的web 应用上下文,它由webConfig加载,这里注入的web应用上下文是子上下文(上下文层级中最低层的上下文)
+```java
+ @ExtendWith(SpringExtension.class)
+@WebAppConfiguration
+@ContextHierarchy({
+        @ContextConfiguration(classes = TestAppConfig.class),
+        @ContextConfiguration(classes = WebConfig.class)
+})
+class ControllerIntegrationTests {
+
+    @Autowired
+    WebApplicationContext wac;
+
+    // ...
+}
+
+
+```
+
+#### class hierarchy with implicit parent context
+此测试示例中的测试类在测试类体系中定义了一个上下文体系, AbstractWebTests 声明了在spring支撑的web应用中的顶级 web应用上下文的配置 ..
+注意,然而,AbstractWebTests 没有声明@ContextHierarchy,因此它的子类能够可选的参与到上下文体系中或者遵循@ContextConfiguration的标准语意 ..
+SoapWebServiceTests and RestWebServiceTests both extend AbstractWebTests and define a context hierarchy by using @ContextHierarchy
+最终结果就是三个应用上下文的上下文都加载了(根据它们声明的@ContextConfiguration),并且基于AbstractWebTests加载的应用上下文作为了具体子类加载的应用上下文的父应用上下文 ...
+以下的示例展示了配置场景:
+```java
+@ExtendWith(SpringExtension.class)
+@WebAppConfiguration
+@ContextConfiguration("file:src/main/webapp/WEB-INF/applicationContext.xml")
+public abstract class AbstractWebTests {}
+
+@ContextHierarchy(@ContextConfiguration("/spring/soap-ws-config.xml"))
+public class SoapWebServiceTests extends AbstractWebTests {}
+
+@ContextHierarchy(@ContextConfiguration("/spring/rest-ws-config.xml"))
+public class RestWebServiceTests extends AbstractWebTests {}
+```
+
+#### 合并上下文体系配置的类体系
+这个示例展示了命名体系层级的使用 - 针对上下文体系的特定层级 - 进行配置合并 ..
+BaseTests 在此体系中定义了两个层级,parent / child. ExtendedTests 扩展了BaseTests 并且指示tcf 在child 体系层级上进行上下文配置合并 ..
+通过确保声明在@contextConfiguration的name属性同时为child, 导致三个应用的应用上下文将被加载：
+- 一个根据/app-config.xml加载
+- 一个根据/user-config.xml加载
+- 一个同时根据/user-config.xml 和 order-config.xml加载
+
+正如前面的示例所示,从/app-config.xml加载的应用上下文将设置为从/user-config.xml 以及 ("/user-config.xml","order-config.xml")加载的应用上下文的父上下文 ..
+如下所示:
+```java
+@ExtendWith(SpringExtension.class)
+@ContextHierarchy({
+    @ContextConfiguration(name = "parent", locations = "/app-config.xml"),
+    @ContextConfiguration(name = "child", locations = "/user-config.xml")
+})
+class BaseTests {}
+
+@ContextHierarchy(
+    @ContextConfiguration(name = "child", locations = "/order-config.xml")
+)
+class ExtendedTests extends BaseTests {}
+
+```
+#### 覆盖上下文体系配置的类体系
+下面的示例说明了如何在上下文体系中的给定命名层级上进行配置覆盖- 通过设置@ContextConfiguration的 inheritLocations标志
+为false. 因此，对于ExtendedTests的应用上下文仅仅从/test-user-config.xml加载,并且它的父上下文将设置为从/app-config.xml加载的上下文 ...
+```java
+@ExtendWith(SpringExtension.class)
+@ContextHierarchy({
+    @ContextConfiguration(name = "parent", locations = "/app-config.xml"),
+    @ContextConfiguration(name = "child", locations = "/user-config.xml")
+})
+class BaseTests {}
+
+@ContextHierarchy(
+    @ContextConfiguration(
+        name = "child",
+        locations = "/test-user-config.xml",
+        inheritLocations = false
+))
+class ExtendedTests extends BaseTests {}
+```
+> 在上下文体系中的上下文的变脏
+> 如果在测试上使用@DirtiesContext,并且这个测试的上下文作为上下文体系的一部分 ..
+> 你能够使用hierarchyMode 标志去控制如何清理上下文缓存 .... 了解更多原因 ..
+> 查看@DirtiesContext的javadoc文档和[spring testing annotations](https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html#spring-testing-annotation-dirtiescontext)中的讨论 ..
 
 ### 5.7  测试装置的依赖注入
 当你使用DependencyInjectionTestExecutionListener(这是默认配置的), 你的测试实例的依赖将会自动从你使用@ContextConfiguration或者其他相关注解配置的应用上下文中
