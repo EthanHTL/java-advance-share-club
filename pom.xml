@@ -10,7 +10,9 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>test</module>
-        <module>spring-project-tests</module>
+        <module>spring-projects/spring-cloud</module>
+        <module>spring-projects/spring-boot</module>
+        <module>spring-projects/spring-project-tests</module>
     </modules>
 
 
@@ -27,6 +29,19 @@
                 <version>2.5.3</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2020.0.6</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-open-service-broker</artifactId>
+                <version>3.3.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
