@@ -2,7 +2,7 @@ package javaSe.clazz;
 
 import javaSe.clazz.annotation.TestBase;
 import javaSe.clazz.annotation.TestBases;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;

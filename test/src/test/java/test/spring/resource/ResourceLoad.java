@@ -1,6 +1,6 @@
 package test.spring.resource;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 

@@ -1,6 +1,7 @@
 package test.boot.tokenizer;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.StringTokenizer;
 
