@@ -5,7 +5,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
 
-    <bean class="org.example.spring.test.TestRequestAndSessionScopedTests$UserPreference"
+    <bean class="org.example.spring.test.integration.support.each.TestRequestAndSessionScopedTests$UserPreference"
           c:theme="#{session.getAttribute('theme')}"
     scope="session">
         <aop:scoped-proxy />
