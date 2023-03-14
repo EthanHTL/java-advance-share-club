@@ -2812,3 +2812,74 @@ driver = MockMvcHtmlUnitDriverBuilder
 ```
 这显然更加啰嗦,但是通过使用MockMvc示例构建WebDriver,我们能够获得一个具有完全能力的MockMvc ..
 ### 7.12.4. MockMvc and Geb
+在前面的部分中,我们尝试了WebDriver 和MockMvc 集成使用.. 这一部分,使用[geb](https://www.gebish.org/) 去编写测试.. 甚至是groovy 语言编写的测试 ..
+#### Geb 以及MockMvc 集成的原因
+Geb本身基于WebDriver支持, 因此它提供了我们从WebDriver中获取的相同好处 .. 然而,Geb 让事情变得更加简单(对于我们仅仅只关心某一些模版代码) ..
+#### MockMvc 以及 Geb 配置
+我们能够容易的初始化一个Geb Browser 通过 - 使用了MockMvc的Selenium WebDriver,如下所示:
+```groovy
+def setup() {
+    browser.driver = MockMvcHtmlUnitDriverBuilder
+        .webAppContextSetup(context)
+        .build()
+}
+```
+> 注意:
+> 这个示例使用MockMvcHtmlUnitDriverBuilder,了解更多高级使用,查看 MockMvcHtmlUnitDriverBuilder的高级使用 ..
+> 这确保了任何引用localhost作为服务器的url 直接通过我们的MockMvc实例 而不需要一个真实的http 连接,任何其他的url 是通过网络连接请求的 ..
+> 这让我们能够容易的测试cdn的使用 ..
+
+#### MockMvc 以及 Geb 使用
+现在我们能够使用Geb ,就像之前那些集成使用一样，不需要部署应用到Servlet 容器中,举个例子,我们能够请求创建消息的视图- 如下:
+```groovy
+to CreateMessagePage
+```
+能够填充表单并提交去创建消息,如下所示:
+```groovy
+when:
+form.summary = expectedSummary
+form.text = expectedMessage
+submit.click(ViewMessagePage)
+```
+任何未识别的方法调用 或者属性访问或者引用 都将会转发到当前页面对象 ..- 这是groovy的特性 \
+这移除了大量的模版代码(当我们直接使用WebDriver时所需要的) .. \
+和直接使用WebDriver 一样,这通过使用页面对象模式优化了HtmlUnit 测试的设计 .. 如前面所提到的,我们能够在HtmlUnit 和WebDriver中使用页面对象模式 .. \
+但是通过Geb甚至更加容易 ... 考虑我们的新的使用Groovy编写的CreateMessagePage 实现 ..
+```groovy
+class CreateMessagePage extends Page {
+    static url = 'messages/form'
+    static at = { assert title == 'Messages : Create'; true }
+    static content =  {
+        submit { $('input[type=submit]') }
+        form { $('form') }
+        errors(required:false) { $('label.error, .alert-error')?.text() }
+    }
+}
+```
+这里创建的CreateMessagePage 继承于Page,我们不需要关注Page的细节，但是总结就是它包含了对于我们页面的常见功能 .. 我们定义了一个能够发现页面的URL... 
+现在让我们导航到页面上,如下:
+```groovy
+to CreateMessagePage
+```
+我们也有一个at 闭包能够判断我们正处于指定的页面 .. 他应该返回true，如果我们在正确的页面中 .. 这就是为什么我们能够断言是否在正确的页面中 .. 如下:
+```groovy
+then:
+at CreateMessagePage
+errors.contains('This field is required.')
+```
+> 注意:
+> 我们能够在闭包中断言 - 因此我们能够判断出这里的有些事情出现了问题(如果我们正在错误的页面中) ..
+
+现在,我们能够创建一个content 闭包(能欧指定页面中感兴趣的区域),我们能够使用[ jQuery-ish Navigator API ](https://www.gebish.org/manual/current/#the-jquery-ish-navigator-api)
+去选择我们感兴趣的内容 .. \
+最终,我们能够验证一个新的消息是成功创建了,如下所示:
+```groovy
+then:
+at ViewMessagePage
+success == 'Successfully created a new message'
+id
+date
+summary == expectedSummary
+message == expectedMessage
+```
+有关Geb 更多信息，【Geb的书](https://www.gebish.org/manual/current/) 用户手册了解更多 ..
