@@ -29,6 +29,7 @@ public class ClientSideTests {
     @Test
     public void test() {
         RestTemplate restTemplate = new RestTemplate();
+
         MockRestServiceServer serviceServer = MockRestServiceServer.bindTo(restTemplate).build();
 
         // 期待有一个 /greeting 请求
