@@ -2883,3 +2883,83 @@ summary == expectedSummary
 message == expectedMessage
 ```
 有关Geb 更多信息，【Geb的书](https://www.gebish.org/manual/current/) 用户手册了解更多 ..
+
+8. 测试客户端应用
+你能够 使用客户端测试去测试內部使用RestTemplate的代码,这个想法是声明期待的请求并提供一个"stub" 响应,因此你能够专注于测试代码(在隔离中,而不需要运行服务器),这下面的示例展示了应该如何做:
+```java
+RestTemplate restTemplate = new RestTemplate();
+
+MockRestServiceServer mockServer = MockRestServiceServer.bindTo(restTemplate).build();
+mockServer.expect(requestTo("/greeting")).andRespond(withSuccess());
+
+// Test code that uses the above RestTemplate ...
+
+mockServer.verify();
+```
+在前面的示例中,MockRestServiceServer(作为客户端rest 测试的核心类)使用一个自定义的ClientHttpRequestFactory配置RestTemplate并根据期待断言实际的请求并返回 "stub" 响应 ..
+在这种情况下,我们请求了/greeting 并响应具有text/plain 内容的200响应 .. 我们能够定义额外的期待的请求以及需要的存根响应 .. \
+当我们定义了期待的请求以及stub响应 --- RestTemplate 可以像往常一样在客户端代码中使用。.. \
+因为主要就是mock restTemplate的过程,然后测试业务逻辑 ...
+
+在测试的末尾,通过mockServer.verify() 来验证所有已经满足的期待 .. \
+默认情况下，请求按照声明期望的顺序进行，你能够设置ignoreExpectOrder 选项(当构建服务器的时候), 也就是对应定义的请求应该有序处理 ..
+这种情况下所有的期待都会检查(按照顺序)去发现对给定请求的匹配 .. \
+这意味着请求允许以任意顺序出现,以下的示例使用了ignoreExpectOrder:
+```java
+server = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
+```
+即使默认使用无序请求,每一个请求仅仅允许执行一次, expect方法提供了一种重载变种 - 能够接收一个ExpectedCount(能够指定一个数值范围) - 
+举个例子(once, manyTimes,max,min,between 以及其他 ...),以下示例使用times:
+也就是前多少次的请求由次服务器mock 响应 ..
+```java
+RestTemplate restTemplate = new RestTemplate();
+        MockRestServiceServer mockServer = MockRestServiceServer.bindTo(restTemplate).build();
+        mockServer.expect(times(2), requestTo("/something")).andRespond(withSuccess());
+        mockServer.expect(times(3), requestTo("/somewhere")).andRespond(withSuccess());
+
+// ...
+mockServer.verify();
+```
+注意,当ignoreExpectOrder 没有设置的时候(默认), 因此所有请求期待根据声明的顺序处理,那么此顺序仅仅应用到任何期待的请求的第一个(也就是顺序中声明的第一个是谁,那么第一个请求必须是它)，
+举个例子如果"/something"期待两次并后跟"/somewhere" 3次\
+那么也就是说请求/somewhere之前应该请求"something", 但是,除了随后的“/something”和“/somewhere”之外(也就是第一个请求执行之后,顺序都是任意的 .. 并不是按照它这里的意思,
+它这里somewhere 在它第一个请求之后,也就是是其他请求,只要你定义了期待 ..)，后续请求可以随时出现。 \
+作为替代,客户端测试支持也提供了 ClientHttpRequestFactory 实现 - 能够配置 RestTemplate 去绑定到MockMvc实例 .. 以下使用实际的服务器逻辑处理请求而无须运行一个服务器 .. 以下的示例展示了如何做:
+```java
+MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+this.restTemplate = new RestTemplate(new MockMvcClientHttpRequestFactory(mockMvc));
+
+// Test code that uses the above RestTemplate ...
+```
+在某些情况下- 它也许需要执行一个实际的调用到远程服务而不是mock一个响应,那么以下的示例展示了如何通过ExecutingResponseCreator 处理:
+```java
+RestTemplate restTemplate = new RestTemplate();
+
+// Create ExecutingResponseCreator with the original request factory
+ExecutingResponseCreator withActualResponse = new ExecutingResponseCreator(restTemplate.getRequestFactory());
+
+MockRestServiceServer mockServer = MockRestServiceServer.bindTo(restTemplate).build();
+mockServer.expect(requestTo("/profile")).andRespond(withSuccess());
+mockServer.expect(requestTo("/quoteOfTheDay")).andRespond(withActualResponse);
+
+// Test code that uses the above RestTemplate ...
+
+mockServer.verify();
+```
+上述代码，我们创建了 ExecutingResponseCreator - 使用来自 RestTemplate中的ClientHttpRequestFactory - 在MockRestServiceServer替代客户端请求工厂之前,将不同于mock 响应的不同客户端请求工厂 .. \
+然后我们定义了两种响应的期待:
+- 对于/profile 端点的stub 200响应(没有实际的请求将执行)
+- 获取一个通过调用/quoteOfTheDay端点的响应 
+
+在第二种情况中,这个请求通过前面捕捉到的ClientHttpRequestFactory执行,这生成了一个响应(可能来自实际的远程服务器，依赖于RestTemplate之前如何配置的)
+
+### 8.1 静态导入
+同服务端测试一样,对于客户端的测试的流式api也需要少部分的静态导入, 这很容易通过MockRest*来发现 ... 或者搜索 ... Eclipse 用户应该可以增加MockRestRequestMatchers.* 以及
+MockRestResponseCreators.* 作为偏好的静态成员(通过Eclipse preferences under java -> Editor -> Content Assist -> Favorites).. 这允许你敲击第一个静态方法名的第一个字符就可以使用内容协助 ..
+其他的IDE(例如 IntelliJ)也许不需要任何额外的配置 .. 检查对静态成员的代码完善支持即可 ..
+### 8.2 对于客户端Rest Tests的更多示例
+Spring MVC Test’s own tests include [example tests](https://github.com/spring-projects/spring-framework/tree/main/spring-test/src/test/java/org/springframework/test/web/client/samples) of client-side REST tests.
+
+
+
+
