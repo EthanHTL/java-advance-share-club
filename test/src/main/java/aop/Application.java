@@ -3,6 +3,7 @@ package aop;
 import aop.config.AppConfig;
 import aop.service.MyEhanceHandler.MyEhanceHandler;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.EnableLoadTimeWeaving;
 
 import java.util.Scanner;
 

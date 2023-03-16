@@ -2,6 +2,10 @@ package org.example.spring.test.integration.support.each;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import jakarta.annotation.Resource;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
 import org.example.spring.test.entity.User;
 import org.example.spring.test.entity.UserRepository;
 import org.h2.Driver;
@@ -34,8 +38,6 @@ import org.springframework.transaction.TransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import javax.persistence.*;
 import javax.sql.DataSource;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

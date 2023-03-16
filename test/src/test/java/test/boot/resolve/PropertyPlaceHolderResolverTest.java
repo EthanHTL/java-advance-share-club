@@ -1,6 +1,6 @@
 package test.boot.resolve;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.util.StringUtils;
 

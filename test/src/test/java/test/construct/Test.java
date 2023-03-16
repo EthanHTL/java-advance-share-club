@@ -6,7 +6,7 @@ package test.construct;
  * @description: test
  */
 public class Test {
-   @org.junit.Test
+    @org.junit.jupiter.api.Test
     public void test(){
        new Boos();
    }
