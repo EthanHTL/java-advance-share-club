@@ -22,6 +22,7 @@ import org.springframework.web.context.annotation.SessionScope;
 import org.springframework.web.context.request.*;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
+import javax.servlet.ServletRequest;
 
 /**
  * 测试请求以及session作用域的bean
