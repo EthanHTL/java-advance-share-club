@@ -13,6 +13,7 @@
         <module>spring-projects/spring-cloud</module>
         <module>spring-projects/spring-boot</module>
         <module>spring-projects/spring-project-tests</module>
+        <module>maven-project-tests</module>
     </modules>
 
 
@@ -53,4 +54,29 @@
         </dependencies>
     </dependencyManagement>
 
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <target>11</target>
+                    <source>11</source>
+                    <compilerArgs>
+                        <arg>
+                            --add-modules=java.base
+                        </arg>
+                        <arg>
+                            --add-opens=java.base/java.lang=ALL-UNNAMED
+                        </arg>
+                        <arg>
+                            --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+                        </arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
