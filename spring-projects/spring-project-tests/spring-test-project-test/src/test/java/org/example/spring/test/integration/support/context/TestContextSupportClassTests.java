@@ -181,7 +181,7 @@ public class TestContextSupportClassTests {
     class OrderServiceIntegrationTests {
 
         @Configuration
-        static class Configure {
+        public static class Configure {
             @Bean
             public ConfigApplicationTests.MyConfigApplication2Tests.OrderService orderService() {
                 return new ConfigApplicationTests.MyConfigApplication2Tests.OrderService() {

@@ -21,7 +21,7 @@ maven 主要负责项目基础设施的管理,让团队成员集中于利益相�
 15. 如何构建其他类型的项目
 16. 如何一次性构建多个项目
 
-## maven 是什么
+## 1. maven 是什么
 咋一看maven似乎可以包含很多东西，但简而言之，maven是一种强势浆膜适用于项目的基础设施，然后我们通过提供最佳实践的清溪路近来促进理解和生产力，
 本质上是一个项目管理和理解工具，因此他提供了项目管理的方法.
 
@@ -32,13 +32,13 @@ maven 主要负责项目基础设施的管理,让团队成员集中于利益相�
 5. scms
 6. 发布
 
-## 如何使用maven 在开发流程中受益
+## 2. 如何使用maven 在开发流程中受益
 可以通过标准的约定和时间来加速您的开发周期，同时帮助您获得更高的成功率，从而为你的构建过程带来好处。现在我们已经介绍了一些卖房的历史和目的，让我们通过一些真实的例子来帮助你启动和运行maven.
 
-## 如何设置maven
+## 3. 如何设置maven
 maven的默认值已经足够,但是我们可能需要更改缓冲位置，例如HTTP代理,那么有关详细信息请参阅[配置maven指南](https://maven.apache.org/guides/mini/guide-configuring-maven.html) ..
 
-## 创建第一个maven 项目
+## 4. 创建第一个maven 项目
 maven创建项目很简单，我们可以使用maven的原型机制 ..
 
 maven中的原型模式被定义为一种原始模式或者模型,所有同类事物均由其制成，在maven中,原型是一个项目模板，他与一些用户输入相结合，
@@ -127,7 +127,7 @@ my-app
 
 这是一个maven约定并且你可以详细阅读[introduction the standard directory layout](https://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html) .. 
 
-## 如何编译应用资源
+## 5. 如何编译应用资源
 仅仅只需要执行以下明亮进行应用资源编译
 ```shell
 mvn compile
@@ -140,7 +140,7 @@ mvn compile
 
 现在我们仅仅编译单个应用程序的源树,显示的ant脚本和maven pom相差无几,但是pom能够做更多事情,且更简单 ...
 
-## 编译测试源并运行单元测试
+## 6. 编译测试源并运行单元测试
 现在只需要执行以下命令即可
 ```shell
 mvn test
@@ -153,7 +153,7 @@ mvn test
 ```shell
 mvn test-compile
 ```
-### 如何创建jar并安装到本地存储库中
+### 7. 如何创建jar并安装到本地存储库中
 制作jar文件很简单,我们可以通过以下命令完成
 ```shell
 mvn package
@@ -188,7 +188,7 @@ mvn clean
 ```
 这个命令将会在构建数据之前移除掉target目录(因此编译内容是新鲜的)
 
-## snapshot 版本
+## 8. snapshot 版本
 携带了`-SNAPSHOT` 在pom.xml文件中的version 标签中那么,标识一个快照版本 ..
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -204,7 +204,7 @@ snapshot 标识了开发分支当前最新的代码,不保证代码稳定或者�
 在发行过程中,一个x.y-SNAPSHOT的版本改变为x.y. 这个发行过程中也会增加开发版本到x.(y+1)-SNAPSHOT,举个例子,version 1.0-SNAPSHOT的发行版为1.0,
 并且新的开发版本为1.1-SNAPSHOT..
 
-## 使用插件
+## 9. 使用插件
 ```xml
 <build>
   <plugins>
@@ -230,7 +230,7 @@ snapshot 标识了开发分支当前最新的代码,不保证代码稳定或者�
 为了发现插件的可用配置,你能够查看 [plugin list](https://maven.apache.org/plugins/) 并导航到插件主页并查看goal的详细配置信息,对于如何配置插件的必要参数,
 你能够查看 [guide to configuring plugins](https://maven.apache.org/guides/mini/guide-configuring-plugins.html) ...
 
-## 如何增加资源到jar中
+## 10. 如何增加资源到jar中
 通常情况下不需要改变pom就已经可以满足了(打包资源到jar中),maven 根据[标准的目录结构](https://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html),使用标准的maven 约定能够打包资源到
 jar中 - 通过将资源放在标准的目录结构中 ...
 
@@ -314,7 +314,7 @@ my-app
 // Do something with the resource
 
 ```
-## 如何过滤资源文件
+## 11. 如何过滤资源文件
 有时资源文件需要包含只能在构建时提供的值。要在 Maven 中完成此操作，请使用语法将包含该值的属性的引用放入您的资源文件中${<property name>}。
 该属性可以是 pom.xml 中定义的值之一、用户的 settings.xml 中定义的值、外部属性文件中定义的属性或系统属性。
 
@@ -473,7 +473,7 @@ command.line.prop=${command.line.prop}
 mvn process-resources "-Dcommand.line.prop=hello again"
 ```
 
-## 使用外部依赖项
+## 12. 使用外部依赖项
 您可能已经注意到dependencies我们用作示例的 POM 中的一个元素。事实上，您一直以来都在使用外部依赖项，但在这里我们将更详细地讨论它是如何工作的。更详尽的介绍请参考我们的[依赖机制简介](https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html)。
 
 pom.xml部分dependencies列出了我们的项目构建所需的所有外部依赖项（无论是在编译时、测试时、运行时还是其他任何时候都需要该依赖项）。现在，我们的项目仅依赖于 JUnit（为了清楚起见，我去掉了所有资源过滤的东西）：
@@ -584,7 +584,7 @@ pom.xml部分dependencies列出了我们的项目构建所需的所有外部依�
 </project>
 ```
 现在，当我们编译项目 ( mvn compile) 时，我们将看到 Maven 为我们下载 log4j 依赖项。
-## 远程部署jar
+## 13. 远程部署jar
 要将 jar 部署到外部存储库，您必须在 pom.xml 中配置存储库 url，并在 settings.xml 中配置用于连接到存储库的身份验证信息。
 
 这是一个使用 scp 和用户名/密码身份验证的示例：
@@ -661,7 +661,7 @@ settings.xml配置
 
 如果在settings.xml. 有关详细信息，请参阅[密码加密](https://maven.apache.org/guides/mini/guide-encryption.html)。
 
-## 创建文档
+## 14. 创建文档
 为了让您快速开始使用 Maven 的文档系统，您可以使用原型机制为您现有的项目生成一个站点，使用以下命令：
 ```shell
 mvn archetype:generate \
@@ -673,7 +673,7 @@ mvn archetype:generate \
 ```
 现在转到[创建站点指南](https://maven.apache.org/guides/mini/guide-site.html)，了解如何为您的项目创建文档。
 
-## 创建其他类型的项目
+## 15. 创建其他类型的项目
 请注意，生命周期适用于任何项目类型。例如，回到基本目录，我们可以创建一个简单的 Web 应用程序：
 ```shell
 mvn archetype:generate \
@@ -715,7 +715,7 @@ mvn package
 ```
 您会看到target/my-webapp.war已构建，并且执行了所有正常步骤。
 
-## 如何一次构建多个项目
+## 16.  如何一次构建多个项目
 Maven 内置了处理多个模块的概念。在本节中，我们将展示如何构建上面的 WAR，并一步包含前面的 JAR。
 
 首先，我们需要pom.xml在其他两个之上的目录中添加一个父文件，因此它应该如下所示

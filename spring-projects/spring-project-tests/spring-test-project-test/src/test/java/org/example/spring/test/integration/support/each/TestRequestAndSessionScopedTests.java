@@ -2,27 +2,19 @@ package org.example.spring.test.integration.support.each;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.aopalliance.aop.Advice;
 import org.junit.jupiter.api.Test;
-import org.springframework.aop.Advisor;
-import org.springframework.aop.framework.Advised;
-import org.springframework.aop.support.DelegatingIntroductionInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.EmbeddedValueResolver;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.*;
-import org.springframework.expression.common.TemplateParserContext;
-import org.springframework.expression.spel.SpelParserConfiguration;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportResource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.web.context.annotation.SessionScope;
-import org.springframework.web.context.request.*;
-import org.springframework.web.servlet.support.RequestContextUtils;
-
-import javax.servlet.ServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletWebRequest;
 
 /**
  * 测试请求以及session作用域的bean
