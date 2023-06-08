@@ -1970,6 +1970,75 @@ client = WebTestClient.bindToController(new TestController())
         .baseUrl("/test")
         .build();
 ```
+
+这可能有一点懵逼, 是因为当你执行了WebTestClient.bindServer() 之后才可以配置客户端的一些配置选项 ..
+
+也就是前面所提到的,通过configureClient 去过度服务器到客户端配置,那么查看源码 .. 发现此方法的具体实现 AbstractMockMvcServerSpec(构建者抽象类),它
+只是其中一种实现
+```java
+...
+@Override
+public WebTestClient.Builder configureClient() {
+        // 配置客户端,必然需要将服务器 配置构建出来,然后当执行了 bindToServer 之后,
+        // 则客户端的一切配置都可用 ..
+        MockMvc mockMvc = getMockMvcBuilder().build();
+        ClientHttpConnector connector = new MockMvcHttpConnector(mockMvc);
+        return WebTestClient.bindToServer(connector);
+        }
+
+@Override
+public WebTestClient build() {
+        return configureClient().build();
+        }
+```
+
+但是所有的抽象约定都是基于bindServer() 之后 过度到 configureClient() ...
+
+例如查看针对 WebFlux的相关配置约定,我们能够发现WebTestClient的静态方法
+```java
+/**
+	 * This server setup option allows you to connect to a live server through
+	 * a Reactor Netty client connector.
+	 * <p><pre class="code">
+	 * WebTestClient client = WebTestClient.bindToServer()
+	 *         .baseUrl("http://localhost:8080")
+	 *         .build();
+	 * </pre>
+	 * @return chained API to customize client config
+	 */
+	static Builder bindToServer() {
+		return new DefaultWebTestClientBuilder();
+	}
+```
+那么查看它的对应服务器抽象: AbstractMockServerSpec
+```java
+...
+
+@Override
+	public WebTestClient.Builder configureClient() {
+		WebHttpHandlerBuilder builder = initHttpHandlerBuilder();
+		if (!CollectionUtils.isEmpty(this.filters)) {
+			builder.filters(theFilters -> theFilters.addAll(0, this.filters));
+		}
+		if (!builder.hasSessionManager() && this.sessionManager != null) {
+			builder.sessionManager(this.sessionManager);
+		}
+		if (!CollectionUtils.isEmpty(this.configurers)) {
+			this.configurers.forEach(configurer -> configurer.beforeServerCreated(builder));
+		}
+		return new DefaultWebTestClientBuilder(builder);
+	}
+
+	@Override
+	public WebTestClient build() {
+		return configureClient().build();
+	}
+```
+能够发现,最终都返回了一个 DefaultWebTestClientBuilder ..
+
+所以配置一个WebTestClient的基本流程就是 配置服务器 然后配置客户端 ..
+
+如果是任意的服务器(端到端测试),那么服务器配置可以不需要,因为你面对的是真实的服务器 ..
 ### 6.2 写测试
 WebTestClient 提供了一个等价于[WebClient](https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-client-body)的api  直到通过使用exchange()去执行一个请求,查看WebClient文档了解如何准备一个请求(使用任何内容 - 包括表单数据 / multipart data 以及其他数据类型) ..
 在调用了exchange()之后,WebTestClient 和WebClient 存在不同并且继续使用工作流去验证响应 ... \
@@ -2117,9 +2186,10 @@ Spring mvc测试框架,成为MockMvc,提供了测试spring mvc应用的支持,�
 MockMvc能够被用来执行请求并验证响应 ... 它能够被WebTestClient使用 - 那种情况下它将加入作为服务器去处理请求 .. \
 WebTestClient的优势是能够和高级对象工作而不仅仅是底层对象 -同样能够完全切换到，成熟的，端到端的http测试 - 针对存活的服务器进行测试并使用相同的测试API做相同的事情 ..
 ### 7.1 概述
-能够对spring mvc 进行单元测试 - 通过实例化一个控制器,注入它的依赖并调用它的方法 ... 然而这种测试不能够验证请求映射，数据绑定以及消息转换，类型转换，验证并且可能它们不能够涉及到
+虽然普通的测试(基于spring ioc 能力)能够对spring mvc 进行单元测试 - 通过实例化一个控制器,注入它的依赖并调用它的方法 ... 然而这种测试不能够验证请求映射，数据绑定以及消息转换，类型转换，验证并且可能它们不能够涉及到
 @InitBinder  /@ModelAttribute / @ExceptionHandler方法的支持 .. \
-spring mvc 测试框架，称为 MockMvc,主要提供了对spring mvc 控制器的完整测试而无须运行服务器 .. 它通过DispatcherServlet执行动作并传递ServletApi的 Mock实现(来自spring-test模块的)
+
+然而,spring mvc 测试框架，称为 MockMvc,主要提供了对spring mvc 控制器的完整测试而无须运行服务器 .. 它通过DispatcherServlet执行动作并传递ServletApi的 Mock实现(来自spring-test模块的)
 它能够复刻完整的spring mvc 请求处理而不需要运行服务器 .. \
 MockMvc 是一个服务端测试框架 - 能够让你验证大多数spring mvc 应用的功能 -通过使用轻量级的 、 指定目标的测试 ... \
 您可以单独使用它来执行请求并验证响应,或者你能够通过WebTestClient Api使用它 ...(使用WebTestClient ,并将MockMvc插入为服务器去处理请求 ..)
@@ -2211,7 +2281,9 @@ standaloneSetup类似于单元测试 ... 仅仅一次测试一个controller ... 
 能够在webAppContextSetup编写所有测试 .. 为了针对实际的spring mvc配置进行测试 ..
 ### 7.4 配置特性
 不管你使用哪一种 MockMvc builder ,那么所有的MockMvcBuilder 提供了某些常见或者非常有用的特性 ..
-例如,你能声明一个 Accept(为所有请求) 并且返回200状态吗 以及在所有响应中都包含一个 Content-Type请求头 ..
+例如,你能声明一个 Accept(为所有请求) 并且返回200状态码 以及在所有响应中都包含一个 Content-Type请求头 ..
+
+这都是defaultRequest方法带给我们的便利(能够统一定义一些属性设置) ...
 ```java
 // static import of MockMvcBuilders.standaloneSetup
 
@@ -2221,8 +2293,11 @@ MockMvc mockMvc = standaloneSetup(new MusicController())
     .alwaysExpect(content().contentType("application/json;charset=UTF-8"))
     .build();
 ```
-除此之外,第三方框架(以及应用)能够预打包配置指令,例如在MockMvcConfigurer中进行配置 .. spring框架有这样的内置实现能够帮助去保留并重用http 会话(跨越多个请求重用session) ..
+除此之外,第三方框架(以及应用)能够预先打包配置指令,例如在MockMvcConfigurer中配置的一些指令.. 
+spring框架有这样的内置实现能够帮助去保留并重用http 会话(跨越多个请求重用session) ..
 你能够如下使用:
+
+这本质上就是插件增强 ..
 ```java
 // static import of SharedHttpSessionConfigurer.sharedHttpSession
 

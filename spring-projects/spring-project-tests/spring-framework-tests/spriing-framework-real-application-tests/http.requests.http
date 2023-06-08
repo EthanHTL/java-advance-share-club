@@ -1,0 +1,38 @@
+PUT  http://localhost:18080/spring-web-mvc/api/simple/test
+Content-Type: application/x-www-form-urlencoded
+
+key=value
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === 'key=unknown')
+    });
+%}
+
+### 提前解析 ..
+PUT  http://localhost:18080/spring-web-mvc/api/simple/test?enableFormContentResolve=true
+Content-Type: application/x-www-form-urlencoded
+
+key=value
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === 'key=value')
+    });
+%}
+
+
+### 使用post 以及 x-www-form-urlencoded
+POST  http://localhost:18080/spring-web-mvc/api/simple/test
+Content-Type: application/x-www-form-urlencoded
+
+key=value
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body === 'key=value')
+    });
+%}
