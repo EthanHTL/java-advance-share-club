@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MockMvcBuilder;
 import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -35,6 +37,25 @@ public class WebTestTests {
                 .expectBody(String.class)
                 .value(System.out::println);
 
+    }
+
+    @Test
+    public void testWithBaiduBaseUrl() throws Exception {
+        WebTestClient testClient = WebTestClient.bindToServer()
+                .baseUrl("http://www.baidu.com")
+                .build();
+
+        EntityExchangeResult<byte[]> result = testClient.get().uri("/s?wd=周杰伦")
+                .exchange()
+                .expectBody()
+                .returnResult();
+
+
+        byte[] responseBody = result.getResponseBody();
+
+        String s = new String(responseBody);
+
+        System.out.println(s);
     }
 
     @Test

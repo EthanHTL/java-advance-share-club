@@ -7,11 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.filter.FormContentFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
-
-import static javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING;
 
 public class MyFilter extends OncePerRequestFilter {
 
@@ -25,12 +21,5 @@ public class MyFilter extends OncePerRequestFilter {
         } else {
             filterChain.doFilter(request, response);
         }
-
-
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-
-        documentBuilderFactory.setFeature(FEATURE_SECURE_PROCESSING,true);
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-
     }
 }

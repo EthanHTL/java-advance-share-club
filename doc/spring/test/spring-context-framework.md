@@ -2507,7 +2507,7 @@ spring 提供了mockMvc 以及 [HtmlUnit](https://htmlunit.sourceforge.io/)的�
 > MockMvc 与模版技术(不依赖于Servlet 容器)工作,例如thymeleaf / freemarker以及其他 ..模版技术 .. 但是不能和jsp协同工作,因为jsp依赖于 servlet 容器 ..
 
 ### 7.12.1 为什么 集成 HtmlUnit
-最脑袋里面最明显的问题是为什么我需要它，通过探索一个非常基本的示例应用能够得到最好的回答 ... 假设你有一个在Message对象上支持crud操作的spring mvc web应用,这个应用也支持通过所有消息进行分页,你应该如何测试它? \
+现在最明显的问题是为什么我需要它，通过探索一个非常基本的示例应用能够得到最好的回答 ... 假设你有一个在Message对象上支持crud操作的spring mvc web应用,这个应用也支持通过所有消息进行分页,你应该如何测试它? \
 在spring mvc中测试,我们能够非常容易的测试 - 我们是否能够创建一个Message,如下:
 ```java
 MockHttpServletRequestBuilder createMessage = post("/messages/")
