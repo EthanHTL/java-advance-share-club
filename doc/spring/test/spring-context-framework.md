@@ -2579,7 +2579,7 @@ mockMvc.perform(createMessage)
 这些挑战并不意味着我们应该结合集成测试，相反我们能够减少端到端集成测试的数量(通过重构我们的详细测试去使用mock服务去更快速,更可靠的测试,而没有任何副作用) ..
 我们能够实现一小部分的正确的端到端测试去验证简单的工作流去确保一切工作正常 ..
 #### 进入HtmlUnit 集成
-因此哦我们可以实现测试页面交互 和 仍然在我们的测试套件中保持高性能的一个平衡,回答是通过 集成HtmlUnit使用MockMvc ..
+因此我们可以实现测试页面交互 和 仍然在我们的测试套件中保持高性能的一个平衡,回答是通过 集成HtmlUnit使用MockMvc ..
 #### HtmlUnit Integration Options
 如果你想集成MockMvc使用HtmlUnit,你包含了大量的选项:
 - [MockMvc 以及 HtmlUnit](https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html#spring-mvc-test-server-htmlunit-mah) : 如果你想要使用底层的HtmlUnit库
@@ -2959,7 +2959,7 @@ message == expectedMessage
 ```
 有关Geb 更多信息，【Geb的书](https://www.gebish.org/manual/current/) 用户手册了解更多 ..
 
-8. 测试客户端应用
+### 8. 测试客户端应用
 你能够 使用客户端测试去测试內部使用RestTemplate的代码,这个想法是声明期待的请求并提供一个"stub" 响应,因此你能够专注于测试代码(在隔离中,而不需要运行服务器),这下面的示例展示了应该如何做:
 ```java
 RestTemplate restTemplate = new RestTemplate();
