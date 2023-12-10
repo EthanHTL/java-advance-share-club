@@ -211,7 +211,7 @@ AbstractTestContextBootstrapper 或者它具体的子类之一进行替代 ..
 
 ## 5.3 TestExecutionListener 配置
 Spring 提供了以下的TestExecutionListener 实现(默认注册的),顺序如下：
-- ServletTestExecutionListener 为WebApplicationContext 配置Servlet api .. mock ..
+- ServletTestExecutionListener 为WebApplicationContext 配置Servlet api .. mock .. 用来可以在测试实例中依赖注入
 - DirtiesContextBeforeModesTestExecutionListener 
    处理"before" 模式下的@DirtiesContext注解 
 - ApplicationEventsTestExecutionListener
