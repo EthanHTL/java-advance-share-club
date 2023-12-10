@@ -1,9 +1,12 @@
 package org.example.spring.mvc.test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.data.cassandra.DataCassandraTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -64,4 +67,31 @@ public class HandlerMappingTests extends AbstractWebApplicationTests {
 
     }
 
+
+    class User {
+        String username;
+
+        String password;
+
+        public String getPassword() {
+            return password;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public User(String username,String password) {
+            this.username = username;
+            this.password = password;
+        }
+    }
 }

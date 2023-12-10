@@ -1,7 +1,5 @@
 package spring.lookup.init;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 /**
  * @author JASONJ

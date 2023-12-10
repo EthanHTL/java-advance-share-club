@@ -1,0 +1,49 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://mycompany.com/hr/schemas" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://mycompany.com/hr/definitions" targetNamespace="http://mycompany.com/hr/definitions">
+    <wsdl:types>
+        <xs:schema xmlns:hr="http://mycompany.com/hr/schemas" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://mycompany.com/hr/schemas">
+            <xs:element name="HolidayRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Holiday" type="hr:HolidayType"/>
+                        <xs:element name="Employee" type="hr:EmployeeType"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="HolidayType">
+                <xs:sequence>
+                    <xs:element name="StartDate" type="xs:date"/>
+                    <xs:element name="EndDate" type="xs:date"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="EmployeeType">
+                <xs:sequence>
+                    <xs:element name="Number" type="xs:integer"/>
+                    <xs:element name="FirstName" type="xs:string"/>
+                    <xs:element name="LastName" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="HolidayRequest">
+        <wsdl:part element="sch:HolidayRequest" name="HolidayRequest"> </wsdl:part>
+    </wsdl:message>
+    <wsdl:portType name="HumanResource">
+        <wsdl:operation name="Holiday">
+            <wsdl:input message="tns:HolidayRequest" name="HolidayRequest"> </wsdl:input>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="HumanResourceSoap11" type="tns:HumanResource">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="Holiday">
+            <soap:operation soapAction=""/>
+            <wsdl:input name="HolidayRequest">
+                <soap:body use="literal"/>
+            </wsdl:input>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="HumanResourceService">
+        <wsdl:port binding="tns:HumanResourceSoap11" name="HumanResourceSoap11">
+            <soap:address location="http://localhost:8080/holidayService/"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

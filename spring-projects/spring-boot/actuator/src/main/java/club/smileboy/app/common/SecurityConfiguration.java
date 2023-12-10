@@ -21,7 +21,7 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain actuatorSecurity(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                .requestMatcher(EndpointRequest.toAnyEndpoint())
+//                .requestMatcher(EndpointRequest.toAnyEndpoint())
                 .authorizeHttpRequests()
                 .anyRequest()
                 .permitAll()

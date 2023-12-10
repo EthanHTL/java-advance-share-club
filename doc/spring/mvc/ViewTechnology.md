@@ -192,7 +192,7 @@ MappingJackson2JsonView 基于ObjectMapper 去渲染响应内容作为JSON,默�
 MappingJackson2XmlView 使用 jackson xml 扩展 XmlMapper 渲染xml的相应内容,如果model中包含了多个条目,你应该显式设置需要序列化的对象-modelKey属性设置,如果model包含了单个条目,自动序列化; \
 你能够定制xml映射(通过使用jaxb 或者 jackson提供的注解),如果你需要更深层次的控制,注册一个自定义的xmlMapper到ObjectMapper属性中,提供自己的序列化和反序列化器;
 ##### xml Marshalling
-MarshallingView 使用一个Xml Marshaller (定义在org.springframework.oxm)去渲染响应内容作为xml,你能够显式设置需要marshalled的对香港,使用modelKey指定,除此之外，此视图迭代所有的model属性以及marshals 第一个类型(被Marshaller所支持),获取更多信息和函数查看org.springframework.oxm包,查看[Marshalling xml using o/x mappers](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/data-access.html#oxm)
+MarshallingView 使用一个Xml Marshaller (定义在org.springframework.oxm)去渲染响应内容作为xml,你能够显式设置需要marshalled的对象,使用modelKey指定,除此之外，此视图迭代所有的model属性以及marshals 第一个类型(被Marshaller所支持),获取更多信息和函数查看org.springframework.oxm包,查看[Marshalling xml using o/x mappers](https://docs.spring.io/spring-framework/docs/5.3.10-SNAPSHOT/reference/html/data-access.html#oxm)
 #### XSLT Views
 XSLT 是 XML 的一种转换语言，作为 Web 应用程序中的视图技术很受欢迎。如果您的应用程序自然地处理 XML 或者您的模型可以轻松地转换为 XML，那么 XSLT 作为视图技术是一个不错的选择。以下部分展示了如何将 XML 文档生成为模型数据，并在 Spring Web MVC 应用程序中使用 XSLT 对其进行转换 \
 这个例子是一个简单的 Spring 应用程序，它在控制器中创建一个单词列表并将它们添加到模型映射中。返回model map以及 XSLT 视图的视图名称。有关 Spring Web MVC 的控制器接口的详细信息，请参阅带注释的控制器。 XSLT 控制器将单词列表转换为准备转换的简单 XML 文档 \

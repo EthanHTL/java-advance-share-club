@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+    <wsdl:types>
+        <s:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/">
+            <s:element name="PostQrGetPersonInfo">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="reqStr" type="s:string" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="PostQrGetPersonInfoResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="PostQrGetPersonInfoResult" type="s:string" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="PostIdNoGetPersonInfo">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="reqStr" type="s:string" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="PostIdNoGetPersonInfoResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element minOccurs="0" maxOccurs="1" name="PostIdNoGetPersonInfoResult" type="s:string" />
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+        </s:schema>
+    </wsdl:types>
+    <wsdl:message name="PostQrGetPersonInfoSoapIn">
+        <wsdl:part name="parameters" element="tns:PostQrGetPersonInfo" />
+    </wsdl:message>
+    <wsdl:message name="PostQrGetPersonInfoSoapOut">
+        <wsdl:part name="parameters" element="tns:PostQrGetPersonInfoResponse" />
+    </wsdl:message>
+    <wsdl:message name="PostIdNoGetPersonInfoSoapIn">
+        <wsdl:part name="parameters" element="tns:PostIdNoGetPersonInfo" />
+    </wsdl:message>
+    <wsdl:message name="PostIdNoGetPersonInfoSoapOut">
+        <wsdl:part name="parameters" element="tns:PostIdNoGetPersonInfoResponse" />
+    </wsdl:message>
+    <wsdl:portType name="InpBjybWebSoap">
+        <wsdl:operation name="PostQrGetPersonInfo">
+            <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">电子凭证获取信息 reqStr 请求信息</wsdl:documentation>
+            <wsdl:input message="tns:PostQrGetPersonInfoSoapIn" />
+            <wsdl:output message="tns:PostQrGetPersonInfoSoapOut" />
+        </wsdl:operation>
+        <wsdl:operation name="PostIdNoGetPersonInfo">
+            <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">证件号获取信息 reqStr 请求信息</wsdl:documentation>
+            <wsdl:input message="tns:PostIdNoGetPersonInfoSoapIn" />
+            <wsdl:output message="tns:PostIdNoGetPersonInfoSoapOut" />
+        </wsdl:operation>
+    </wsdl:portType>
+<!--    // 1.1-->
+    <wsdl:binding name="InpBjybWebSoap" type="tns:InpBjybWebSoap">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+        <wsdl:operation name="PostQrGetPersonInfo">
+            <soap:operation soapAction="http://tempuri.org/PostQrGetPersonInfo" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="PostIdNoGetPersonInfo">
+            <soap:operation soapAction="http://tempuri.org/PostIdNoGetPersonInfo" style="document" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+
+<!--    1.2-->
+    <wsdl:binding name="InpBjybWebSoap12" type="tns:InpBjybWebSoap">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+        <wsdl:operation name="PostQrGetPersonInfo">
+            <soap12:operation soapAction="http://tempuri.org/PostQrGetPersonInfo" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="PostIdNoGetPersonInfo">
+            <soap12:operation soapAction="http://tempuri.org/PostIdNoGetPersonInfo" style="document" />
+            <wsdl:input>
+                <soap12:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="InpBjybWeb">
+        <wsdl:port name="InpBjybWebSoap" binding="tns:InpBjybWebSoap">
+            <soap:address location="http://172.16.255.248:8503/InpBjybWeb.asmx" />
+        </wsdl:port>
+        <wsdl:port name="InpBjybWebSoap12" binding="tns:InpBjybWebSoap12">
+            <soap12:address location="http://172.16.255.248:8503/InpBjybWeb.asmx" />
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
