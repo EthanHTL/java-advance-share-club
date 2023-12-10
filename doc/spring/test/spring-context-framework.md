@@ -131,7 +131,7 @@ AbstractTransactionalJUnit4SpringContextTests 以及 AbstractTransactionalTestNG
 JdbcTestUtils方法的方法 ..
 ### 4.2  内嵌数据库
 spring-jdbc模块提供了配置和启动一个内嵌的数据库 .. 这能够在集成测试中进行数据库交互 ...
-查看[内嵌数据库支持](../core/new/data.access/dao-support.md#394-)  以及与内嵌数据进行测试数据访问逻辑  详情了解 ..
+查看[内嵌数据库支持](../core/new/data.access/dao-support.md#39-内嵌数据库支持)  以及与内嵌数据进行测试数据访问逻辑  详情了解 ..
 
 
 ## 5. Spring TCF(testContext framework)
