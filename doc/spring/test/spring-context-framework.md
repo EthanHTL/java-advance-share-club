@@ -152,8 +152,6 @@ TestExecutionListener 实现)这能够检测实际的测试执行 - 通过(依�
 一个SmartContextLoader 负责加载一个ApplicationContext - 为给定的测试类加载 .. \
 查看javadoc 以及 Spring 测试套件了解更多信息以及各种实现的示例 ...
 
-![img_1.png](img_1.png)
-
 ### 5.1.1 测试上下文
 测试上下文封装了当前正在运行测试的上下文(不需要关心使用的实际测试框架)并且提供上下文管理 以及缓存支持(
 为它负责的测试实例),这个测试TestContext 同样代理到 SmartContextLoader 去加载一个应用上下文(如果请求) ..
