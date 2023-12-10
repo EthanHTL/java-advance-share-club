@@ -817,7 +817,8 @@ TestContext框架使用了以下的配置参数去构建上下文缓存key:
 - locations(来自@ContextConfiguration的属性)
 - classes(来自@ContextConfiguration的属性)
 - contextInitializerClasses (from @ContextConfiguration)
-- contextCustomizers (from ContextCustomizerFactory) - 这包括@DynamicPropertySource方法以及来自Spring boot测试支持的各种特性(例如@MockBean / @SpyBean)
+- contextCustomizers (from ContextCustomizerFactory,测试上下文引导器中配置的上下文自定义器工厂,而这玩意是SPI,可以通过spring.factories 配置加载) \
+  这包括@DynamicPropertySource方法以及来自Spring boot测试支持的各种特性(例如@MockBean / @SpyBean)
 - contextLoader(来自@ContextConfiguration)
 - parent 来自（@ContextHierarchy)
 - activeProfiles(来自@ActiveProfiles)

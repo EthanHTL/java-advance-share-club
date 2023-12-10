@@ -31,7 +31,7 @@ public class TestPropertySourceTests {
      * {@link org.springframework.test.context.support.TestPropertySourceUtils#mergeTestPropertySourceAttributes(List)}}
      * 其中
      * {@code  TestPropertySourceAttributes#mergeWith(TestPropertySourceAttributes)} 会校验{@link TestPropertySource} 以及
-     * 上的inheritxxx相关属性必须一致 ..(在多个属性源出现的情况下)h
+     * 上的inheritxxx相关属性必须一致 ..(在多个属性源出现的情况下)
      * @param environment 环境
      */
     @Test
