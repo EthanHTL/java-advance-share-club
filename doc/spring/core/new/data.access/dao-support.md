@@ -1645,7 +1645,7 @@ org.springframework.jdbc.datasource.init 包提供初始化一个存在数据库
     <jdbc:script location="classpath:com/foo/sql/db-test-data.sql"/>
 </jdbc:initialize-database>
 ```
-这钱吗的示例运行了针对数据库的两个特定脚本 ... 第一个创建schema,第二个使用测试数据集填充表 ..
+这前面的示例运行了针对数据库的两个特定脚本 ... 第一个创建schema,第二个使用测试数据集填充表 ..
 脚本位置也可以是带有通配符的模式，采用通常用于 Spring 资源的 Ant 样式(例如: classpath*:/com/foo/**/sql/*-data.sql)..
 如果你使用模式匹配,这个脚本根据它们url或者文件名的词汇顺序进行运行 ..
 数据库初始化器的默认行为对于运行提供的脚本来说是未定义的 .. 这也许不总是你想要的 .. 例如,如果你想要针对已经包含了这些测试数据的数据库运行这些脚本 ..

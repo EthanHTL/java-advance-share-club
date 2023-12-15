@@ -826,13 +826,14 @@ TestContext框架使用了以下的配置参数去构建上下文缓存key:
 - propertySourceProperties (from @TestPropertySource)
 - resourceBasePath (from @WebAppConfiguration)
 
-上下文共享发生在, 所产生的上下文key是一致的,那么则对于测试类将会共享相同的应用上下文 .. 这意味着加载应用上下文的配置话费仅仅只会增加一次(对于每一个测试套件 / 一组测试),后续的测试执行
+上下文共享发生在, 所产生的上下文key是一致的,那么则对于测试类将会共享相同的应用上下文 .. \
+这意味着加载应用上下文的配置花费仅仅只会增加一次(对于每一个测试套件 / 一组测试),后续的测试执行
 可以更快 ..
 > 测试套件和forked 进程
 > spring tcf 在静态缓存中存储应用上下文,这意味着上下文是从字面上是存在一个静态变量中 .. 换句话说,如果测试运行在独立的进程中静态缓存将会在每一次测试执行之间进行清除 ..
 > 这有效的禁用了缓存机制 ..
 > 为了从缓存机制中收益,所以需要所有测试运行在相同的进程或者测试套件中 ...这能够通过在ide中执行一组测试(将所有测试分为一组)，类似的通过构建框架例如Ant,Maven,Gradle等执行测试时,
-> 确保构建框架不会在测试之间进行fork.. 举个例子,maven surefire plug-in的forkMode模式设置为always或者pertest,
+> 确保构建框架不会在测试之间进行fork.. 举个例子,maven surefire plugin的forkMode模式设置为always或者pertest,
 > 那么tcf将不能够在测试类之间进行上下文缓存并且构建程序明显的运行的更慢 ..
 
 并且上下文缓存的尺寸限制为默认32(最大),无论是否达到,都会有一个lru(最近最少使用抛弃策略)被用来抛弃并关闭陈旧的上下文 .. 你能够配置最大值(通过命令行 或者 构建脚本设置jvm 系统属性) - spring.test.context.cache.maxSize .
@@ -847,7 +848,8 @@ DirtiesContextTestExecutionListener提供的，这默认启用 ...
 > 当使用tcf调试一个测试时,你能够分析控制台输出(对应系统输出和错误输出流 - SYSOUT / SYSERR). 某些构建工具以及ides 能够关联控制台输出到给定测试，然而某些控制台输出不能容易的关联到给定测试 ..
 > 有关由spring框架自己以及注册到应用上下文中的组件触发的控制台日志,需要理解在一个测试套件中由Spring测试框架加载的应用上下文的生命周期 ...
 > 通常一个测试的应用上下文是当测试类的时候已经准备好的时候将会加载,例如通过依赖注入到测试实例的字段上，这意味着在应用上下文的初始化阶段的任何尝试控制台日志输出都通常不能够关联到一个独立的测试方法(
-> 因此此时 测试方法还没有执行 ..,且测试实例正在初始化中 ..) .. 然而,如果上下文在一个测试方法执行之前立即关闭(根据@DirtiesContext语意)，一个上下文的新实例将被加载（在下一个测试方法执行之前) .. 后者的情况下，ide或者构建工具
+> 因为此时 测试方法还没有执行 ..,且测试实例正在初始化中 ..) .. 然而,如果上下文在一个测试方法执行之前立即关闭(根据@DirtiesContext语意)，一个上下文的新实例将被加载（在下一个测试方法执行之前) .. \
+> 后者的情况下(@DirtiesContext语意 语义)，ide或者构建工具
 > 能够关联控制台日志输出到独立的测试方法 ..
 > 一个测试的应用上下文能够在以下的情况进行关闭:
 > - 根据@DirtiesContext语意关闭 ..
@@ -1559,17 +1561,17 @@ class TransactionalSqlScriptsTests {
 ### 5.11 并行测试执行
 spring 5.0 引入了在单个jvm中并行执行测试的基本支持(当使用spring TestContext框架时).. 这意味着大多数测试类和测试方法能够并行执行而无须改变任何测试代码或者配置 ..
 > 了解如何配置并行测试执行，查看测试框架，构建工具 / ide 的文档 ..
-> 记住在测试套件中引入的兵法可能导致不期待的副作用,奇怪的运行时行为 .. 以及此测试可能会不间断的或者随机的失败 ..
+> 记住在测试套件中引入的并发可能导致不期待的副作用,奇怪的运行时行为 .. 以及此测试可能会不间断的或者随机的失败 ..
  
 spring 团队因此提供了以下的通用指南(当不能并行运行测试时):
 如果测试无法并行运行的情况：
 - 使用了spring框架的DirtiesContext支持
 - 使用Spring boot的MockBean和SpyBean注解支持
-- 使用Junit4的@fiexMethodOrder支持或者任何测试框架特性(可能确保方法在特定顺序下执行),注意,如果整个测试在并行下运行,那么这一条将不适用 ..
+- 使用Junit4的@FixMethodOrder支持或者任何测试框架特性(可能确保方法在特定顺序下执行),注意,如果整个测试在并行下运行,那么这一条将不适用 ..
 - 改变共享服务或者系统的状态（例如数据库,消息代理 以及文件系统等其他),这适用于内嵌以及外部系统 ..
 > 如果并行测试执行失败并出现异常，表明当前测试的 ApplicationContext 不再处于活动状态，这通常意味着应用上下文在不同线程中从上下文缓存中移除 ..
 > 这也许是由于@Dirtiescontext的使用或者由于ContextCache的自动抛弃,如果@DirtiesContext 是罪犯,你也许需要寻找一种方式去避免使用@DirtiesContext或者将这些测试从
-> 并行测试中排除,如果ContextCache的最大尺寸已经达到,你呢个能够增加缓存的最大尺寸,查看上下文缓存的详情 ...
+> 并行测试中排除,如果ContextCache的最大尺寸已经达到,你能够能够增加缓存的最大尺寸,查看上下文缓存的详情 ...
 
 ## 5.12 测试上下文框架支持的类
 ### 5.12.1 Spring Junit 4 Runner
@@ -1821,7 +1823,7 @@ class OrderServiceIntegrationTests {
 注意到来自Junit Jupiter的@RepeatedTest使用让测试方法能够赢得 / 获得对RepetitionInfo的访问..
 #### @Nested test 类配置
 Spring TestContext框架支持使用测试相关的注解到@Nested 的JUnit Jupiter的测试类上, 从Spring框架5.0开始 ..
-然而,知道Spring 5.3 类级别的测试配置注解不能被闭包类进行继承(就像从父类上继承一样) ... \
+然而,在Spring 5.3之前 类级别的测试配置注解不能被闭包类进行继承(就像从父类上继承一样) ... \
 Spring5.3 引入了一流的支持 - 为了让闭包类继承测试类的配置, 并且这些配置默认将被继承 .. - 为了改变默认的INHERIT模式
 到OVERRIDE 模式,你可以注释单独的@Nested 测试 - 使用@NestedTestConfiguration(EnclosingConfiguration.OVERRIDE) ..
 显式的 @NestedTestConfiguration 声明将应用到注释的类 - 同样它的任何子类和内嵌类 ..
@@ -1875,13 +1877,13 @@ org.springframework.test.context.testng 包提供了对TestNG相关的支持 - �
 - 在当前项目中使用tcf加载应用上下文的所有集成测试的构建时间检测
   - 提供了基于JUnit Jupiter 以及 Junit4的测试的显式支持 以及对TestNG以及其他使用spring core 测试注解的测试框架的隐式支持 .. 只要当前测试式通过使用注册到当前项目的
   Junit Platform TestEngine运行的 ..
-- 构建时间aot 处理: 在当前项目中的每一个独一无二的测试上下文将刷新的aot 过程(或者处理)
+- 构建时 AOT 处理：当前项目中的每个唯一测试 ApplicationContext 将被刷新以进行 AOT 处理。
 - 运行时aot 支持: 当在aot运行时模式下执行时,一个spring集成测试将使用一个aot优化的ApplicationContext(它透明的参与到上下文缓存中 !!)
 > 警告:
 > @contextHierarchy 注解当前在aot模式下是不支持的 ..
 
 为了提供特定测试运行时提示 - 对于在Graalvm 原生镜像下使用时,你有以下选项:
-- 实现爱你自定义的TestRuntimeHintsRegistrar 并通过META-INF/spring/aot.factories 全局注册 ..
+- 实现一个自定义的TestRuntimeHintsRegistrar 并通过META-INF/spring/aot.factories 全局注册 ..
 - 实现  RuntimeHintsRegistrar 并通过META-INF/spring/aot.factories 全局注册或者使用@ImportRuntimeHints局部注册到测试类上 ..
 - 通过@Reflective 或者 @RegisterReflectionForBinding. 注释测试类
 - See [Runtime Hints](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#core.aot.hints) for details on Spring’s core runtime hints and annotation support.
@@ -2106,7 +2108,7 @@ client.post().uri("/persons")
         .expectStatus().isCreated()
         .expectBody().isEmpty();
 ```
-如果你想要忽略响应内容,下面的方式断言没有任何内容
+如果你想要忽略响应内容,下面的方式则没有断言任何内容(释放了对内容的断言)
 ```java
 client.get().uri("/persons/123")
         .exchange()
@@ -2351,7 +2353,7 @@ class MyWebTests {
     }
 }
 ```
-这钱吗的属性将会影响由MockMvc实例执行的任何请求 ... 如果相同的属性在给定的请求上设置,他将覆盖默认值 .. 那就是为什么在默认请求中的http 方法以及url不重要 .. 因为每一个额外的
+这前面的属性将会影响由MockMvc实例执行的任何请求 ... 如果相同的属性在给定的请求上设置,他将覆盖默认值 .. 那就是为什么在默认请求中的http 方法以及url不重要 .. 因为每一个额外的
 请求都会被指定 ..
 
 ### 7。6 定义期待
@@ -2701,7 +2703,7 @@ webClient = MockMvcWebClientBuilder
 HtmlTextInput summaryInput = currentPage.getHtmlElementById("summary");
 summaryInput.setValueAttribute(summary);
 ```
-因此我们如果改变id 到 smmry将会发生什么呢? 这样做会迫使我们更新所有测试以包含此更改，这违背了DRY 原理,因此我们应该理想的抓取这段代码到我们自己的方法中,如下所示
+因此我们如果改变id 到 smmry将会发生什么呢? 这样做会迫使我们更新所有测试以包含此更改，这违背了DRY(不要重复 don't repeat yourself) 原理,因此我们应该理想的抓取这段代码到我们自己的方法中,如下所示
 ```java
 public HtmlPage createMessage(HtmlPage currentPage, String summary, String text) {
     setSummary(currentPage, summary);
@@ -3056,13 +3058,13 @@ Spring MVC Test’s own tests include [example tests](https://github.com/spring-
 - @Named(jakarta.inject) 如果Jsr-330 存在
 - @PersistenceContext(jakarta.persistence) 如果Jpa 存在
 - @PersistenceUnit(jakarta.persistence) 如果jpa 存在
-- @Transactional (org.springframework.transaction.annotation) (在tcf中具有有限属性支持,例如不支持事务中执行,或者绝不)
+- @Transactional (org.springframework.transaction.annotation) ([在tcf中具有有限属性支持,例如不支持事务中执行,或者绝不](https://docs.spring.io/spring-framework/reference/testing/testcontext-framework/tx.html#testcontext-tx-attribute-support))
 
 > 注意:
 > jsr-250 生命周期注解
 > 在spring tcf 中,你能够使用@PostConstruct 以及 @PreDestroy 到任何配置在应用上下文中的应用组件上 .. 然而,这些生命周期注解在实际的测试类中使用的应该很少 ..
 > 
-> 如果一个在测试类中的方法标注了@PostConstruct,那么此方法将运行在底层测试框架(并不是指tcf,而是junit4 或者其他测试框架)的任何before方法之前 ...(举个例子,通过注释了JUnit Jupiter的@BeforeEach方法),另一方面,如果在测试类中的一个方法通过@PreDestroy 进行注释 .. 那么方法将绝不会运行... 因此在一个测试类中,我们土建使用来自底层测试框架的测试生命周期回调 而不是 @PostConstruct and @PreDestroy .
+> 如果一个在测试类中的方法标注了@PostConstruct,那么此方法将运行在底层测试框架(并不是指tcf,而是junit4 或者其他测试框架)的任何before方法之前 ...(举个例子,通过注释了JUnit Jupiter的@BeforeEach方法),另一方面,如果在测试类中的一个方法通过@PreDestroy 进行注释 .. 那么方法将绝不会运行... 因此在一个测试类中,我们建使用来自底层测试框架的测试生命周期回调 而不是 @PostConstruct and @PreDestroy .
 
 ### 9.1.2 spring 测试注解
 spring框架提供了以下的spring 特定的注解集合 能够让你使用在连同textContext框架的单元或者集成测试中.. 查看相关的文档了解更多信息,包括默认属性值,属性别名,以及其他详情 ... \
@@ -3092,7 +3094,7 @@ spring 测试注解包括了以下内容:
 
 #### @ContextConfiguration
 这是一个类级别的元数据定义注解 能够被用来判断如何为集成测试 - 加载并配置一个applicationContext. \
-@ContextConfiguration 声明了应用上下文资源路径 胡总和被用来加载应用上下文的组件类 .. \
+@ContextConfiguration 声明了应用上下文资源路径 和被用来加载应用上下文的组件类 .. \
 资源路路径通常是一个xml配置文件或者groovy 脚本(位于类路径上的),然而组件类通常是一个标注了@Configuration的类 .. 然而资源路径也能够指向文件系统中的文件或者脚本,并且组件类也可以是@Component class,@Service 类以及其他 ..(查看组件类了解详情) .. \
 以下的示例展示了通过@ContextConfiguration 注释引用XML文件:
 ```java
@@ -3233,7 +3235,7 @@ class FreshContextTests {
     // some tests that require a new Spring container
 }
 ```
-- 在当前测试类之前标识上下文脏了 .. \
+- 在当前测试类之后标识上下文脏了 .. \
 在当前上下文之后标识上下文脏了,你可以声明类模式为AFTER_CLASS(例如,默认的类模式)
 标识在执行之后将导致上下文变脏 .
 ```java
