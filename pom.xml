@@ -15,6 +15,7 @@
         <module>spring-projects/spring-project-tests</module>
         <module>maven-project-tests</module>
         <module>java-web-projects</module>
+        <module>code-specification/effect-java</module>
     </modules>
 
 
